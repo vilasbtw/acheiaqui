@@ -1,0 +1,19 @@
+:root{--cor:#1f5fbf;--fundo:#f5f7fa;--borda:#d8dee6;--texto:#1c2430}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,sans-serif;background:var(--fundo);color:var(--texto);line-height:1.5}
+header{background:var(--cor);color:#fff;padding:.75rem 1rem;display:flex;flex-wrap:wrap;gap:.5rem 1.25rem;align-items:center}
+header strong{font-size:1.15rem;margin-right:auto}
+header a{color:#fff;text-decoration:none}
+header a:hover{text-decoration:underline}
+main{max-width:720px;margin:0 auto;padding:1rem}
+form,.card,.info{background:#fff;border:1px solid var(--borda);border-radius:8px;padding:1rem;margin-bottom:.75rem}
+label{display:block;font-weight:600;margin:.75rem 0 .25rem}
+small{color:#5b6573}
+input,textarea,button{width:100%;font:inherit;padding:.6rem;border:1px solid var(--borda);border-radius:6px}
+button{background:var(--cor);color:#fff;border:0;cursor:pointer;margin-top:1rem}
+button:disabled{opacity:.6;cursor:wait}
+.busca{display:flex;gap:.5rem}.busca button{width:auto;margin:0}
+.meta{color:#5b6573;font-size:.9rem;margin:.25rem 0 0}
+.msg{padding:.6rem .8rem;border-radius:6px;margin:.75rem 0}
+.ok{background:#e3f6e8}.erro{background:#fde8e8}.aviso{background:#eef2f7}
+.info{background:#fff8e1}

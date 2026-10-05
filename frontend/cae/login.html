@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Login da CAE — Achei Aqui</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <header><strong>Achei Aqui</strong><a href="../index.html">Voltar ao site</a></header>
+  <main>
+    <h1>Área da CAE</h1>
+    <form id="form-login">
+      <label for="email">E-mail</label>
+      <input id="email" type="email" autocomplete="username" required>
+      <label for="senha">Senha</label>
+      <input id="senha" type="password" autocomplete="current-password" required>
+      <button id="entrar" type="submit">Entrar</button>
+    </form>
+    <div id="mensagem"></div>
+  </main>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/login.js"></script>
+</body>
+</html>

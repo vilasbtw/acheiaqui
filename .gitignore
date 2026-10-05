@@ -1,0 +1,23 @@
+# Segredos
+backend/venv/
+backend/__pycache__/
+backend/**/__pycache__/
+backend/.env
+*.pyc
+.env
+.env.*
+!.env.example
+
+# Python
+venv/
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.coverage
+
+# Editor / sistema
+.vscode/
+.idea/
+Thumbs.db
+estrutura.txt

@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Registrar item encontrado — Achei Aqui</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header><strong>Achei Aqui</strong><a href="index.html">Buscar</a><a href="registrar.html">Registrei um item</a><a href="cae/login.html">Área da CAE</a></header>
+  <main>
+    <h1>Encontrou um item?</h1>
+    <p class="info" id="info-cae"></p>
+    <form id="form-registro">
+      <label for="descricao">O que você encontrou?</label>
+      <textarea id="descricao" rows="3" minlength="3" maxlength="1000" required placeholder="Ex.: garrafa térmica azul com adesivo"></textarea>
+      <label for="local">Onde encontrou?</label>
+      <input id="local" list="locais" minlength="2" maxlength="100" required placeholder="Ex.: Biblioteca">
+      <datalist id="locais"><option value="Biblioteca"><option value="Cantina"><option value="Pátio"><option value="Quadra"><option value="Bloco A"><option value="Bloco B"><option value="Laboratório de informática"><option value="Estacionamento"></datalist>
+      <label for="encontrado_em">Quando encontrou?</label>
+      <input id="encontrado_em" type="datetime-local" required>
+      <label for="contato">Seu contato <small>(opcional)</small></label>
+      <input id="contato" maxlength="100" placeholder="Nome, e-mail ou telefone">
+      <small>Usado só pela CAE, caso precise falar com você. Não aparece na busca pública.</small>
+      <button id="enviar" type="submit">Registrar item</button>
+    </form>
+    <div id="mensagem"></div>
+  </main>
+  <script src="js/api.js"></script>
+  <script src="js/registrar.js"></script>
+</body>
+</html>
