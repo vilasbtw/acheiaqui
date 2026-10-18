@@ -1,0 +1,56 @@
+name: DAST
+
+# Roda depois que o código entra na main, toda segunda de madrugada e sob demanda.
+# O alvo é uma cópia descartável da API (banco SQLite temporário), então não toca no Supabase.
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "0 5 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  zap:
+    name: OWASP ZAP (API scan)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+      - run: pip install -r requirements.txt
+
+      - name: Subir a API de teste
+        env:
+          PYTHONPATH: .
+        run: |
+          nohup python scripts/subir_para_dast.py > ../api.log 2>&1 &
+          for i in $(seq 1 30); do
+            curl -fsS http://127.0.0.1:8000/saude && exit 0
+            sleep 2
+          done
+          echo "API não subiu a tempo"; cat ../api.log; exit 1
+
+      - name: Rodar o ZAP
+        working-directory: .
+        run: |
+          mkdir -p zap-out && chmod 777 zap-out
+          docker run --rm --network host -v "$PWD/zap-out:/zap/wrk:rw" \
+            ghcr.io/zaproxy/zaproxy:stable zap-api-scan.py \
+            -t http://127.0.0.1:8000/openapi.json -f openapi \
+            -r relatorio-zap.html -I
+
+      - name: Guardar o relatório
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: relatorio-zap
+          path: zap-out/

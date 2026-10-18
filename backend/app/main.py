@@ -41,5 +41,5 @@ def saude(sessao: Session = Depends(obter_sessao)):
     try:
         sessao.execute(text("SELECT 1"))
     except Exception:
-        raise HTTPException(status_code=503, detail="Banco de dados indisponível.")
+        raise HTTPException(status_code=503, detail="Banco de dados indisponível.") from None
     return {"status": "ok"}

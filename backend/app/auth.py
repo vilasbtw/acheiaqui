@@ -37,7 +37,7 @@ def exigir_autenticacao_cae(
             timeout=10,
         )
     except httpx.HTTPError:
-        raise HTTPException(status_code=503, detail="Serviço de autenticação indisponível.")
+        raise HTTPException(status_code=503, detail="Serviço de autenticação indisponível.") from None
 
     if resposta.status_code != 200:
         raise HTTPException(

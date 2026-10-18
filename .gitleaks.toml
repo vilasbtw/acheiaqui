@@ -1,0 +1,9 @@
+# Usa as regras padrão do Gitleaks e libera SÓ o valor da chave publishable do Supabase
+# (pública por design). O arquivo auth.js continua sendo verificado: se alguém colar ali
+# uma chave secreta ou service_role por engano, a esteira reprova.
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Chave publishable do Supabase (pública por design)"
+regexes = ['''sb_publishable_[A-Za-z0-9_\-]{20,}''']

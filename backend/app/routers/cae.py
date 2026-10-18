@@ -68,6 +68,6 @@ def registrar_devolucao(item_id: int, dados: DevolucaoCriar, sessao: Session = D
         sessao.commit()
     except IntegrityError:  # duas pessoas da CAE devolvendo o mesmo item ao mesmo tempo
         sessao.rollback()
-        raise HTTPException(status_code=409, detail="Este item já foi devolvido.")
+        raise HTTPException(status_code=409, detail="Este item já foi devolvido.") from None
     sessao.refresh(item)
     return item

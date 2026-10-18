@@ -1,0 +1,8 @@
+# Ferramentas usadas só na esteira e no desenvolvimento (NÃO vão para o deploy).
+# Versões fixas: o Ruff, por exemplo, muda as regras padrão entre versões.
+-r requirements.txt
+ruff==0.17.1
+bandit==1.9.4
+pytest==9.1.1
+pytest-cov==7.1.0
+pip-audit==2.10.1
