@@ -1,44 +1,42 @@
 # Achei Aqui
 
-Portal web de achados e perdidos, desenvolvido como trabalho de faculdade.
+Portal web para registro e consulta de itens achados e perdidos. O sistema traz transparência no processo de devolução e conta com um agente de Inteligência Artificial para identificar correspondências automáticas entre itens perdidos e encontrados.
 
-## Stack
+## Tecnologias
 
-- **Backend:** Python (FastAPI) + SQLAlchemy
-- **Banco de dados / Auth / Storage:** Supabase
-- **Frontend:** HTML, CSS e JavaScript puro
-- **Deploy:** Render (backend) + Vercel/Netlify (frontend) — free tier
+O projeto utiliza Python, FastAPI, SQLAlchemy e Supabase no backend. O frontend é construído com HTML, CSS e JavaScript. A inteligência artificial atua na comparação semântica de descrições para gerar alertas automáticos.
 
-## Estrutura do projeto
+## Como rodar pela primeira vez
 
-```
-achei-aqui/
-├── backend/        # API FastAPI
-├── frontend/        # Portal web (HTML/CSS/JS)
-└── docs/            # Memory bank e matriz de requisitos
-```
+Abra o seu terminal para clonar o repositório e configurar o backend.
 
-## Como rodar o backend localmente
-
-```bash
-cd backend
+git clone https://github.com/vilasbtw/acheiaqui.git
+cd C:/acheiaqui/backend
 python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
+venv\Scripts\activate
 pip install -r requirements.txt
-cp .env.example .env      # preencher com os dados do Supabase
 uvicorn app.main:app --reload
-```
 
-A API sobe em `http://localhost:8000`. Documentação automática em `http://localhost:8000/docs`.
+Abra um novo terminal para iniciar o frontend.
 
-## Como rodar o frontend localmente
+cd C:\Pagani\acheiaqui\frontend
+python -m http.server 5500
 
-Basta abrir os arquivos `.html` da pasta `frontend/` no navegador, ou servir a pasta com uma extensão tipo Live Server. Nenhum build é necessário.
+Acesse o endereço localhost:5500 no seu navegador.
 
-## Convenções do time
+## Como rodar pela segunda vez
 
-- **Branches:** uma por funcionalidade, ex: `feature/registrar-item`, `feature/painel-cae`
-- **Nomenclatura:** em português, já que o domínio do projeto é em português (`item`, `devolucao`, `categoria` etc.)
-- **`.env`:** nunca commitado — cada integrante configura o próprio localmente a partir do `.env.example`
+Para rodar o projeto novamente em outras ocasiões, o processo é mais curto.
 
-Mais detalhes de decisões de arquitetura em [`docs/memory-bank.md`](docs/memory-bank.md).
+No terminal do backend, execute os comandos de ativação.
+
+cd C:/acheiaqui/backend
+venv\Scripts\activate
+uvicorn app.main:app --reload
+
+Em outro terminal, inicie o servidor do frontend.
+
+cd C:\Pagani\acheiaqui\frontend
+python -m http.server 5500
+
+Acesse o endereço localhost:5500 no seu navegador.
