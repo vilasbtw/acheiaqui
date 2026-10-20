@@ -30,7 +30,7 @@ Para rodar o projeto novamente em outras ocasiões, o processo é mais curto.
 
 No terminal do backend, execute os comandos de ativação.
 
-cd C:/acheiaqui/backend
+cd C:\Pagani\acheiaqui\backend
 venv\Scripts\activate
 uvicorn app.main:app --reload
 

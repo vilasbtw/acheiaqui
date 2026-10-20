@@ -9,12 +9,15 @@ Segurança: a descrição vem de qualquer pessoa, então é tratada só como dad
 da IA só vale se for o nome de uma categoria que realmente existe. Na pior das hipóteses
 (texto malicioso), o item ganha uma categoria errada da lista; nada além disso.
 """
+import logging
 import os
 import re
 import unicodedata
 from typing import Optional
 
 import httpx
+
+logger = logging.getLogger("achei_aqui.ia")
 
 TIMEOUT = httpx.Timeout(8.0)  # passou disso, segue sem categoria
 MAX_DESCRICAO = 500
@@ -50,7 +53,11 @@ def sugerir_categoria(descricao: str, categorias: list[str]) -> Optional[str]:
     chave = os.getenv("IA_API_KEY", "").strip()
     base = os.getenv("IA_BASE_URL", "").strip().rstrip("/")
     modelo = os.getenv("IA_MODEL", "").strip()
-    if not (chave and base and modelo and categorias):
+    faltando = [n for n, v in (("IA_API_KEY", chave), ("IA_BASE_URL", base), ("IA_MODEL", modelo)) if not v]
+    if faltando:
+        logger.warning("IA desativada: faltam no .env (ou estão vazias): %s. Reinicie o servidor depois de editar o .env.", ", ".join(faltando))
+        return None
+    if not categorias:
         return None
 
     lista = "\n".join(f"- {nome}" for nome in categorias)
@@ -70,8 +77,16 @@ def sugerir_categoria(descricao: str, categorias: list[str]) -> Optional[str]:
             timeout=TIMEOUT,
         )
         if resposta.status_code != 200:
+            logger.warning("IA: o provedor respondeu %s: %s", resposta.status_code, resposta.text[:300])
             return None
         texto = resposta.json()["choices"][0]["message"]["content"]
-    except (httpx.HTTPError, ValueError, KeyError, IndexError, TypeError):
+    except httpx.HTTPError as erro:
+        logger.warning("IA: falha de rede ou tempo esgotado (%s): %s", type(erro).__name__, erro)
         return None
-    return _casar_categoria(texto or "", categorias)
+    except (ValueError, KeyError, IndexError, TypeError) as erro:
+        logger.warning("IA: resposta fora do formato esperado (%s)", type(erro).__name__)
+        return None
+    categoria = _casar_categoria(texto or "", categorias)
+    if categoria is None:
+        logger.warning("IA: a resposta não corresponde a nenhuma categoria. Resposta recebida: %r", (texto or "")[:120])
+    return categoria
