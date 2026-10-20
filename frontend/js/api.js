@@ -1,7 +1,8 @@
-// Comunicação com o backend. Depois do deploy, troque API_URL pela URL do Render.
-const API_URL = "http://localhost:8000";
-// Texto fixo exibido ao público (RF04). AJUSTEM com os dados reais da CAE.
-const INFO_CAE = "Para retirar ou entregar um item, procure a CAE (sala X, segunda a sexta, 8h às 17h).";
+const API_URL = ["localhost", "127.0.0.1"].includes(location.hostname)
+  ? "http://localhost:8000"
+  : "https://acheiaqui-api.onrender.com";
+
+const INFO_CAE = "Para retirar ou entregar um item, procure a CAE.";
 
 async function chamarApi(caminho, opcoes) {
   let resposta;
