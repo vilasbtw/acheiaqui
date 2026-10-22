@@ -1,13 +1,18 @@
 """
-Fixtures dos testes: banco SQLite em memória (sem tocar no Supabase) e API real.
+Fixtures dos testes: API real + banco.
+- Padrão (local, rápido): SQLite em memória, sem tocar em nenhum servidor.
+- Com TEST_DATABASE_URL definida (CI): PostgreSQL de verdade, com as migrações já aplicadas.
+  ATENÇÃO: nesse modo os testes APAGAM os dados das tabelas; por isso só aceitam banco LOCAL.
 - `client`     : visitante sem login (para testar o que é público e o bloqueio 401)
 - `client_cae` : simula uma pessoa da CAE já autenticada
 """
+import os
 from datetime import timedelta
+from urllib.parse import urlparse
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
@@ -20,18 +25,52 @@ from app.tempo import agora_local
 
 CATEGORIAS = ("Documentos", "Eletrônicos", "Bolsas e mochilas")
 
+URL_POSTGRES = os.getenv("TEST_DATABASE_URL", "").strip()
+USA_POSTGRES = bool(URL_POSTGRES)
+HOSTS_PERMITIDOS = {"localhost", "127.0.0.1", "::1", "postgres"}
+_motor_postgres = None
+
+
+def pytest_collection_modifyitems(config, items):
+    """Testes marcados com @pytest.mark.postgres só rodam quando há um PostgreSQL de teste."""
+    if USA_POSTGRES:
+        return
+    pular = pytest.mark.skip(reason="precisa de PostgreSQL: defina TEST_DATABASE_URL (banco LOCAL de teste)")
+    for item in items:
+        if "postgres" in item.keywords:
+            item.add_marker(pular)
+
+
+def _obter_motor_postgres():
+    global _motor_postgres
+    if _motor_postgres is None:
+        host = urlparse(URL_POSTGRES).hostname
+        if host not in HOSTS_PERMITIDOS:
+            raise RuntimeError(
+                f"TEST_DATABASE_URL aponta para '{host}'. Os testes APAGAM os dados, então só aceitam "
+                "um banco local (localhost). Nunca use o banco do Supabase."
+            )
+        _motor_postgres = create_engine(URL_POSTGRES.replace("postgresql://", "postgresql+psycopg2://", 1))
+    return _motor_postgres
+
 
 @pytest.fixture()
 def sessao_teste():
-    motor = create_engine("sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool)
-    Base.metadata.create_all(motor)
+    if USA_POSTGRES:
+        motor = _obter_motor_postgres()
+        with motor.begin() as conexao:
+            conexao.execute(text("TRUNCATE devolucoes, itens, categorias RESTART IDENTITY CASCADE"))
+    else:
+        motor = create_engine("sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool)
+        Base.metadata.create_all(motor)
     sessao = sessionmaker(bind=motor, autoflush=False)()
     sessao.add_all([Categoria(nome=nome) for nome in CATEGORIAS])
     sessao.commit()
     yield sessao
     sessao.close()
-    Base.metadata.drop_all(motor)
-    motor.dispose()
+    if not USA_POSTGRES:
+        Base.metadata.drop_all(motor)
+        motor.dispose()
 
 
 @pytest.fixture()

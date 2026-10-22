@@ -1,3 +1,7 @@
+-- HISTÓRICO: este arquivo é o estado do banco no fim do MVP.
+-- A fonte da verdade do banco agora são as migrações em db/migrations/ (veja db/README.md).
+-- Não edite este arquivo para mudar o banco: crie uma nova migração.
+
 -- Achei Aqui — schema do MVP (fonte da verdade do banco)
 -- Rodar no SQL Editor do Supabase. Decisões: D3, D4, D7, D9, D10, D17.
 
