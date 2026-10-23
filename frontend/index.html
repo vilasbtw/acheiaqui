@@ -7,19 +7,20 @@
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-  <header><strong>Achei Aqui</strong><a href="index.html">Buscar</a><a href="registrar.html">Registrei um item</a><a href="cae/login.html">Área da CAE</a></header>
+  <header><strong>Achei Aqui</strong><label class="campus">Campus <select id="campus" disabled><option>Carregando…</option></select></label><a href="index.html" data-manter-campus>Buscar</a><a href="registrar.html" data-manter-campus>Registrei um item</a><a href="cae/login.html">Área da CAE</a></header>
   <main>
     <h1>Perdeu algo?</h1>
     <form id="form-busca" class="busca">
       <input id="q" type="search" maxlength="100" placeholder="Ex.: garrafa azul, carteira, chave" aria-label="O que você perdeu?">
       <button type="submit">Buscar</button>
     </form>
-    <p class="info" id="info-cae"></p>
+    <p class="info" id="info-cae" hidden></p>
     <div id="mensagem"></div>
     <div id="resultados"></div>
     <button id="mais" type="button" hidden>Ver mais</button>
   </main>
   <script src="js/api.js"></script>
+  <script src="js/campus.js"></script>
   <script src="js/buscar.js"></script>
 </body>
 </html>

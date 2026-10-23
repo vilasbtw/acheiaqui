@@ -2,8 +2,6 @@ const API_URL = ["localhost", "127.0.0.1"].includes(location.hostname)
   ? "http://localhost:8000"
   : "https://acheiaqui-api.onrender.com";
 
-const INFO_CAE = "Para retirar ou entregar um item, procure a CAE.";
-
 async function chamarApi(caminho, opcoes) {
   let resposta;
   try {
@@ -18,9 +16,15 @@ async function chamarApi(caminho, opcoes) {
       if (typeof corpo.detail === "string") motivo = corpo.detail;
       else if (Array.isArray(corpo.detail)) motivo = corpo.detail.map((d) => d.msg).join(" ");
     } catch (e) { /* mantém a mensagem padrão */ }
-    throw new Error(motivo);
+    const erro = new Error(motivo);
+    erro.status = resposta.status;
+    throw erro;
   }
   return resposta.json();
+}
+
+function listarCampi() {
+  return chamarApi("/campi");
 }
 
 function registrarItem(dados) {
@@ -31,8 +35,8 @@ function registrarItem(dados) {
   });
 }
 
-function buscarItens(q, limit, offset) {
-  const params = new URLSearchParams({ limit, offset });
+function buscarItens(campus, q, limit, offset) {
+  const params = new URLSearchParams({ campus, limit, offset });
   if (q) params.set("q", q);
   return chamarApi("/itens?" + params.toString());
 }

@@ -8,14 +8,14 @@ const botaoMais = document.getElementById("mais");
 function mostrar(texto, tipo) { mensagem.textContent = texto; mensagem.className = texto ? "msg " + tipo : ""; }
 function formatarData(iso) { return iso.split("-").reverse().join("/"); } // evita deslocar o dia por fuso
 
-// Chama a API enviando o token. Se a sessão acabou, volta para o login.
+// Chama a API enviando o token. Se a sessão acabou (401), volta para o login.
 async function chamarCae(caminho, opcoes = {}) {
   const token = await tokenAtual();
   if (!token) { location.href = "login.html"; throw new Error("Sessão expirada."); }
   try {
     return await chamarApi(caminho, { ...opcoes, headers: { ...(opcoes.headers || {}), Authorization: "Bearer " + token } });
   } catch (erro) {
-    if (/Token inválido|Autenticação necessária/.test(erro.message)) {
+    if (erro.status === 401) {
       await supabaseCliente.auth.signOut();
       location.href = "login.html";
     }
@@ -93,4 +93,20 @@ document.getElementById("sair").addEventListener("click", async (e) => {
   location.href = "login.html";
 });
 
-tokenAtual().then((token) => { if (!token) location.href = "login.html"; else carregar(true); });
+// Primeiro descobre o campus da pessoa (D21). Logado sem vínculo com a CAE (403): explica e não mostra o painel.
+async function iniciar() {
+  mostrar("Carregando… se o servidor estava parado, pode levar até 1 minuto.", "aviso");
+  let campus;
+  try {
+    campus = await chamarCae("/cae/campus");
+  } catch (erro) {
+    if (erro.status === 403) document.getElementById("form-filtros").hidden = true;
+    mostrar(erro.message, "erro");
+    return;
+  }
+  document.getElementById("campus-cae").textContent = "Campus " + campus.nome;
+  document.getElementById("site-publico").href = "../index.html?campus=" + encodeURIComponent(campus.sigla);
+  carregar(true);
+}
+
+tokenAtual().then((token) => { if (!token) location.href = "login.html"; else iniciar(); });

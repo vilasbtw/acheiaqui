@@ -1,6 +1,8 @@
 const POR_PAGINA = 20;
+let campus = null;
 let termo = "";
 let deslocamento = 0;
+let consultaAtual = 0; // ignora respostas antigas quando a pessoa troca de campus no meio de uma busca
 
 const formBusca = document.getElementById("form-busca");
 const campoBusca = document.getElementById("q");
@@ -30,19 +32,27 @@ function criarCard(item) {
 async function carregar(reiniciar) {
   if (reiniciar) { deslocamento = 0; resultados.replaceChildren(); }
   botaoMais.hidden = true;
+  if (!campus) {
+    mostrar("Escolha o seu campus no topo da página para ver os itens.", "aviso");
+    return;
+  }
+  const consulta = ++consultaAtual;
   mostrar("Buscando… se o servidor estava parado, a primeira busca pode levar até 1 minuto.", "aviso");
   try {
-    const itens = await buscarItens(termo, POR_PAGINA, deslocamento);
+    const itens = await buscarItens(campus.sigla, termo, POR_PAGINA, deslocamento);
+    if (consulta !== consultaAtual) return;
     itens.forEach((item) => resultados.append(criarCard(item)));
     deslocamento += itens.length;
     botaoMais.hidden = itens.length < POR_PAGINA;
-    mostrar(resultados.children.length ? "" : "Nenhum item encontrado. Tente outras palavras ou volte mais tarde.", "aviso");
+    mostrar(resultados.children.length ? "" : "Nenhum item encontrado neste campus. Tente outras palavras ou volte mais tarde.", "aviso");
   } catch (erro) {
-    mostrar(erro.message, "erro");
+    if (consulta === consultaAtual) mostrar(erro.message, "erro");
   }
 }
 
 formBusca.addEventListener("submit", (e) => { e.preventDefault(); termo = campoBusca.value.trim(); carregar(true); });
 botaoMais.addEventListener("click", () => carregar(false));
-document.getElementById("info-cae").textContent = INFO_CAE;
-carregar(true);
+iniciarCampus(
+  (escolhido) => { campus = escolhido; carregar(true); },
+  (erro) => mostrar(erro.message, "erro"),
+);
