@@ -88,12 +88,32 @@ A chave pública não é segredo, mas só vale com RLS ligado em todas as tabela
 `python backend/scripts/verificar_supabase.py`. Se um segredo foi para o Git, apagar o commit não basta: troque a
 chave primeiro.
 
+## Contas da CAE e campus
+
+Desde a Etapa 1, ter login **não basta**: a API só libera o painel para quem tem uma linha em `cae_membros`, que diz
+de qual campus a pessoa é (D21). Sem essa linha, o painel recebe 403.
+
+1. Crie a conta em Authentication, Users (o cadastro livre continua desativado) e copie o **User UID** dela.
+2. No SQL Editor do mesmo projeto:
+
+   ```sql
+   INSERT INTO cae_membros (user_id, campus_id)
+   VALUES ('COLE-O-UUID-AQUI', (SELECT id FROM campi WHERE sigla = 'hto'));
+   ```
+
+3. Para tirar o acesso: `DELETE FROM cae_membros WHERE user_id = '...';` (e, se for o caso, apague a conta no Auth).
+
+Uma pessoa pertence a um campus só (`UNIQUE`). Para mudar de campus, faça um `UPDATE` na linha dela.
+**No deploy da Etapa 1**, as contas da CAE que já existem em produção precisam dessa linha antes de o backend novo
+entrar no ar; senão, ninguém da CAE consegue abrir o painel.
+
 ## Como recriar o banco
 
 Serve para voltar de um desastre ou para criar o projeto de desenvolvimento.
 
 1. Crie um projeto no Supabase (o plano gratuito permite 2 ativos).
-2. Em Authentication, desative o cadastro livre de usuários (D6) e crie à mão as contas da CAE.
+2. Em Authentication, desative o cadastro livre de usuários (D6) e crie à mão as contas da CAE (depois das
+   migrações, vincule cada uma ao campus: seção "Contas da CAE e campus").
 3. Copie a connection string (Session pooler) para um arquivo novo, por exemplo `backend/.env.novo`, com `DATABASE_URL`
    (o `.gitignore` já ignora `.env.*`).
 4. Crie as tabelas: `python backend/scripts/aplicar_migracoes.py --env backend/.env.novo`. A `0001` cria tabelas,
@@ -121,6 +141,7 @@ Serve para voltar de um desastre ou para criar o projeto de desenvolvimento.
 | `/saude` responde 503 | Banco pausado ou `DATABASE_URL` errada | Seção "Se o Supabase pausar" |
 | Itens novos sem categoria | IA desligada ou sem cota. No log do Render aparece `achei_aqui.ia` com o motivo | Conferir as 3 variáveis `IA_*` e a cota do provedor |
 | Painel da CAE devolve 401 | Sessão expirada, ou `SUPABASE_URL`/`SUPABASE_ANON_KEY` diferentes do projeto usado no login | Entrar de novo; conferir as variáveis |
+| Painel da CAE devolve 403 ("não está vinculada à CAE") | Login certo, mas a conta não tem linha em `cae_membros` | Seção "Contas da CAE e campus" |
 | Migração recusada | Ver a tabela "Problemas comuns" em `db/README.md` | |
 
 Os logs da API ficam na aba Logs do serviço no Render.
