@@ -1,5 +1,8 @@
 import httpx
 import pytest
+from conftest import USUARIOS
+
+CAE_DO_CAMPUS_A = {"id": str(USUARIOS["tsta"]), "email": "cae@exemplo.com"}
 
 
 @pytest.fixture()
@@ -8,14 +11,14 @@ def supabase_configurado(monkeypatch):
     monkeypatch.setenv("SUPABASE_ANON_KEY", "sb_publishable_teste")
 
 
-def _simular_supabase(monkeypatch, status=None, erro=None):
+def _simular_supabase(monkeypatch, status=None, erro=None, corpo=None):
     chamadas = []
 
     def falso_get(url, headers=None, timeout=None):
         chamadas.append({"url": url, "headers": headers})
         if erro:
             raise erro
-        return httpx.Response(status, json={"id": "usuario-1"})
+        return httpx.Response(status, json=CAE_DO_CAMPUS_A if corpo is None else corpo)
 
     monkeypatch.setattr("app.auth.httpx.get", falso_get)
     return chamadas
@@ -33,6 +36,19 @@ def test_token_valido_passa_e_e_enviado_ao_supabase(client, supabase_configurado
 def test_token_invalido_da_401(client, supabase_configurado, monkeypatch):
     _simular_supabase(monkeypatch, status=401)
     resposta = client.get("/cae/itens", headers={"Authorization": "Bearer qualquer-coisa"})
+    assert resposta.status_code == 401
+
+
+def test_token_valido_de_quem_nao_e_da_cae_da_403(client, supabase_configurado, monkeypatch):
+    _simular_supabase(monkeypatch, status=200, corpo={"id": str(USUARIOS[None])})
+    resposta = client.get("/cae/itens", headers={"Authorization": "Bearer token-de-outra-pessoa"})
+    assert resposta.status_code == 403
+
+
+@pytest.mark.parametrize("corpo", [{}, {"id": None}, {"id": "nao-e-uuid"}, []])
+def test_resposta_do_supabase_sem_id_valido_da_401(client, supabase_configurado, monkeypatch, corpo):
+    _simular_supabase(monkeypatch, status=200, corpo=corpo)
+    resposta = client.get("/cae/itens", headers={"Authorization": "Bearer x"})
     assert resposta.status_code == 401
 
 

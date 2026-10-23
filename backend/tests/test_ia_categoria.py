@@ -3,6 +3,7 @@ def _categoria_do_item(client, descricao="Carteira com documentos", **extra):
     from app.tempo import agora_local
 
     corpo = {
+        "campus": "tsta",
         "descricao": descricao,
         "local_encontrado": "Biblioteca",
         "encontrado_em": (agora_local() - timedelta(hours=1)).isoformat(timespec="minutes"),

@@ -3,6 +3,7 @@ from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from app.schemas.campus import CampusPublico
 from app.schemas.devolucao import DevolucaoResposta
 from app.tempo import FUSO_CAMPUS, agora_local
 
@@ -15,6 +16,7 @@ class ItemCriar(BaseModel):
 
     model_config = ConfigDict(str_strip_whitespace=True)
 
+    campus: str = Field(min_length=2, max_length=10, description="Sigla do campus (ex.: hto)")
     descricao: str = Field(min_length=3, max_length=1000)
     local_encontrado: str = Field(min_length=2, max_length=100)
     encontrado_em: datetime
@@ -44,6 +46,7 @@ class ItemPublico(BaseModel):
     id: int
     descricao: str
     categoria: Optional[str] = None
+    campus: Optional[CampusPublico] = None
     local_encontrado: str
     encontrado_em: datetime
     criado_em: Optional[datetime] = None

@@ -31,7 +31,7 @@ def test_contato_opcional_vazio_vira_nulo(client_cae, payload):
 def test_contato_informado_fica_visivel_so_para_a_cae(client_cae, payload):
     client_cae.post("/itens", json=payload(contato_achador="maria@exemplo.com"))
     assert client_cae.get("/cae/itens").json()[0]["contato_achador"] == "maria@exemplo.com"
-    publico = client_cae.get("/itens").json()
+    publico = client_cae.get("/itens", params={"campus": "tsta"}).json()
     assert "contato_achador" not in publico[0]
 
 
@@ -77,83 +77,83 @@ def test_horario_com_fuso_e_convertido_para_o_campus(client_cae, payload):
 def test_busca_por_palavra_da_descricao(client, payload):
     client.post("/itens", json=payload(descricao="Garrafa térmica azul"))
     client.post("/itens", json=payload(descricao="Carregador de celular"))
-    resposta = client.get("/itens", params={"q": "garrafa"})
+    resposta = client.get("/itens", params={"campus": "tsta", "q": "garrafa"})
     assert [i["descricao"] for i in resposta.json()] == ["Garrafa térmica azul"]
 
 
 def test_busca_ignora_maiusculas(client, payload):
     client.post("/itens", json=payload(descricao="Garrafa térmica azul"))
-    assert len(client.get("/itens", params={"q": "GARRAFA"}).json()) == 1
+    assert len(client.get("/itens", params={"campus": "tsta", "q": "GARRAFA"}).json()) == 1
 
 
 def test_busca_por_nome_da_categoria(client, payload, id_categoria):
     client.post("/itens", json=payload(descricao="Carteira preta", categoria_id=id_categoria("Documentos")))
     client.post("/itens", json=payload(descricao="Caderno verde"))
-    resposta = client.get("/itens", params={"q": "documentos"})
+    resposta = client.get("/itens", params={"campus": "tsta", "q": "documentos"})
     assert [i["descricao"] for i in resposta.json()] == ["Carteira preta"]
 
 
 def test_busca_por_local(client, payload):
     client.post("/itens", json=payload(descricao="Guarda-chuva", local_encontrado="Cantina"))
     client.post("/itens", json=payload(descricao="Caderno", local_encontrado="Biblioteca"))
-    assert [i["descricao"] for i in client.get("/itens", params={"q": "cantina"}).json()] == ["Guarda-chuva"]
+    assert [i["descricao"] for i in client.get("/itens", params={"campus": "tsta", "q": "cantina"}).json()] == ["Guarda-chuva"]
 
 
 def test_mais_palavras_batendo_aparece_primeiro(client, payload):
     client.post("/itens", json=payload(descricao="Garrafa azul", local_encontrado="Cantina"))
     client.post("/itens", json=payload(descricao="Garrafa vermelha", local_encontrado="Biblioteca"))
     client.post("/itens", json=payload(descricao="Garrafa azul e branca", local_encontrado="Bloco A"))
-    ordem = [i["descricao"] for i in client.get("/itens", params={"q": "garrafa azul"}).json()]
+    ordem = [i["descricao"] for i in client.get("/itens", params={"campus": "tsta", "q": "garrafa azul"}).json()]
     assert ordem[-1] == "Garrafa vermelha"
     assert set(ordem[:2]) == {"Garrafa azul", "Garrafa azul e branca"}
 
 
 def test_busca_sem_resultado_devolve_lista_vazia(client, payload):
     client.post("/itens", json=payload())
-    assert client.get("/itens", params={"q": "violao"}).json() == []
+    assert client.get("/itens", params={"campus": "tsta", "q": "violao"}).json() == []
 
 
 def test_busca_so_com_palavras_curtas_nao_devolve_tudo(client, payload):
     client.post("/itens", json=payload())
-    assert client.get("/itens", params={"q": "de a"}).json() == []
+    assert client.get("/itens", params={"campus": "tsta", "q": "de a"}).json() == []
 
 
 def test_busca_nao_trata_curingas_como_curingas(client, payload):
     client.post("/itens", json=payload())
-    assert client.get("/itens", params={"q": "%%%"}).json() == []
-    assert client.get("/itens", params={"q": "___"}).json() == []
+    assert client.get("/itens", params={"campus": "tsta", "q": "%%%"}).json() == []
+    assert client.get("/itens", params={"campus": "tsta", "q": "___"}).json() == []
 
 
 def test_sem_busca_lista_mais_recentes_primeiro(client, payload):
     for nome in ("Primeiro item", "Segundo item", "Terceiro item"):
         client.post("/itens", json=payload(descricao=nome))
-    assert [i["descricao"] for i in client.get("/itens").json()] == ["Terceiro item", "Segundo item", "Primeiro item"]
+    assert [i["descricao"] for i in client.get("/itens", params={"campus": "tsta"}).json()] == ["Terceiro item", "Segundo item", "Primeiro item"]
 
 
 def test_paginacao(client, payload):
     for numero in range(5):
         client.post("/itens", json=payload(descricao=f"Item numero {numero}"))
-    primeira = client.get("/itens", params={"limit": 2, "offset": 0}).json()
-    segunda = client.get("/itens", params={"limit": 2, "offset": 2}).json()
+    primeira = client.get("/itens", params={"campus": "tsta", "limit": 2, "offset": 0}).json()
+    segunda = client.get("/itens", params={"campus": "tsta", "limit": 2, "offset": 2}).json()
     assert len(primeira) == 2 and len(segunda) == 2
     assert not {i["id"] for i in primeira} & {i["id"] for i in segunda}
 
 
 def test_limites_de_paginacao_invalidos(client):
-    assert client.get("/itens", params={"limit": 0}).status_code == 422
-    assert client.get("/itens", params={"limit": 51}).status_code == 422
-    assert client.get("/itens", params={"offset": -1}).status_code == 422
+    assert client.get("/itens", params={"campus": "tsta", "limit": 0}).status_code == 422
+    assert client.get("/itens", params={"campus": "tsta", "limit": 51}).status_code == 422
+    assert client.get("/itens", params={"campus": "tsta", "offset": -1}).status_code == 422
 
 
 def test_busca_longa_demais_e_recusada(client):
-    assert client.get("/itens", params={"q": "a" * 101}).status_code == 422
+    assert client.get("/itens", params={"campus": "tsta", "q": "a" * 101}).status_code == 422
 
 
 def test_item_devolvido_some_da_busca_publica(client_cae, payload):
     item = client_cae.post("/itens", json=payload()).json()
-    assert len(client_cae.get("/itens").json()) == 1
+    assert len(client_cae.get("/itens", params={"campus": "tsta"}).json()) == 1
     client_cae.post(f"/cae/itens/{item['id']}/devolucao", json={"nome_retirante": "João Silva"})
-    assert client_cae.get("/itens").json() == []
+    assert client_cae.get("/itens", params={"campus": "tsta"}).json() == []
     assert client_cae.get(f"/itens/{item['id']}").status_code == 404
 
 

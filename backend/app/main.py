@@ -6,7 +6,7 @@ from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from app.database import obter_sessao  # importar antes dos routers: carrega o .env
-from app.routers import categorias, cae, itens
+from app.routers import cae, campi, categorias, itens
 
 app = FastAPI(title="Achei Aqui API", version="0.1.0")
 
@@ -25,6 +25,7 @@ app.add_middleware(
     allow_headers=["Authorization", "Content-Type"],
 )
 
+app.include_router(campi.router)
 app.include_router(categorias.router)
 app.include_router(itens.router)
 app.include_router(cae.router)

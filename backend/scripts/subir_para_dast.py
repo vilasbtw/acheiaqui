@@ -19,6 +19,7 @@ import uvicorn  # noqa: E402
 import app.models  # noqa: E402,F401  (registra os models)
 from app.database import Base, SessionLocal, engine  # noqa: E402
 from app.main import app  # noqa: E402
+from app.models.campus import Campus  # noqa: E402
 from app.models.categoria import Categoria  # noqa: E402
 from app.models.item import Item  # noqa: E402
 
@@ -27,6 +28,7 @@ def preparar_banco() -> None:
     Base.metadata.create_all(engine)
     with SessionLocal() as sessao:
         sessao.add_all([Categoria(nome=n) for n in ("Documentos", "Eletrônicos", "Chaves")])
+        sessao.add(Campus(sigla="hto", nome="Hortolândia", cidade="Hortolândia", info_retirada="Procure a CAE."))
         sessao.commit()
         sessao.add(
             Item(
@@ -35,6 +37,7 @@ def preparar_banco() -> None:
                 encontrado_em=datetime(2026, 10, 1, 10, 0),
                 contato_achador="teste@exemplo.com",
                 categoria_id=1,
+                campus_id=1,
             )
         )
         sessao.commit()
