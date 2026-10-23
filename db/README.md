@@ -42,6 +42,12 @@ python backend/scripts/aplicar_migracoes.py --env backend/.env.prod
 
 O script mostra em **qual servidor e banco** vai mexer e pede para você digitar `sim`. Leia essa linha.
 
+## Dados só de desenvolvimento
+
+`db/seeds/` guarda SQL que **nunca** vai para produção, por exemplo os campi de teste que provam o isolamento entre
+campi (`dev_campi_teste.sql`). Rode no SQL Editor do Supabase de **desenvolvimento**, depois das migrações.
+Fica fora de `db/migrations/` justamente para o script de migração (e o CI) não aplicar isso em produção.
+
 ## Primeira vez em produção (banco que já existe)
 
 A migração `0001_baseline.sql` foi escrita para rodar em um banco novo **ou** em um que já tem as tabelas e

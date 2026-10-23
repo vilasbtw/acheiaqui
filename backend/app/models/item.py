@@ -10,6 +10,8 @@ class Item(Base):
     id = Column(Integer, primary_key=True)
     descricao = Column(Text, nullable=False)
     categoria_id = Column(Integer, ForeignKey("categorias.id"))
+    # Nulo por enquanto: a trava NOT NULL vem depois que o backend passar a informar o campus (Etapa 1).
+    campus_id = Column(Integer, ForeignKey("campi.id"))
     local_encontrado = Column(String(100), nullable=False)
     encontrado_em = Column(DateTime, nullable=False)  # hora local, sem fuso (D7)
     contato_achador = Column(String(100))  # opcional; só a CAE pode ver (D5)
