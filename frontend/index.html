@@ -4,21 +4,72 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Achei Aqui — Achados e Perdidos</title>
+  <meta name="description" content="Achados e perdidos do campus: procure o que você perdeu ou registre o que encontrou.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-  <header><strong>Achei Aqui</strong><label class="campus">Campus <select id="campus" disabled><option>Carregando…</option></select></label><a href="index.html" data-manter-campus>Buscar</a><a href="registrar.html" data-manter-campus>Registrei um item</a><a href="cae/login.html">Área da CAE</a></header>
-  <main>
-    <h1>Perdeu algo?</h1>
-    <form id="form-busca" class="busca">
-      <input id="q" type="search" maxlength="100" placeholder="Ex.: garrafa azul, carteira, chave" aria-label="O que você perdeu?">
-      <button type="submit">Buscar</button>
-    </form>
+  <a class="pular" href="#conteudo">Pular para o conteúdo</a>
+  <header class="topo">
+    <div class="topo-conteudo">
+      <a class="marca" href="index.html" data-manter-campus>Achei Aqui</a>
+      <nav class="menu" aria-label="Principal">
+        <a href="index.html" data-manter-campus aria-current="page">Buscar</a>
+        <a href="registrar.html" data-manter-campus>Achei um item</a>
+        <a href="cae/login.html">Área da CAE</a>
+      </nav>
+      <label class="seletor-campus">Campus
+        <select id="campus" disabled><option>Carregando…</option></select>
+      </label>
+    </div>
+  </header>
+
+  <main id="conteudo">
+    <section class="destaque" aria-labelledby="titulo">
+      <h1 id="titulo">Perdeu algo?</h1>
+      <p>Procure entre os itens que foram encontrados no seu campus.</p>
+      <form id="form-busca" class="busca" role="search">
+        <label for="q" class="visualmente-oculto">O que você perdeu?</label>
+        <input id="q" type="search" maxlength="100" placeholder="Ex.: garrafa azul, carteira, chave">
+        <button type="submit">Buscar</button>
+      </form>
+      <div class="linha-filtros">
+        <label for="categoria">Categoria</label>
+        <select id="categoria"><option value="">Todas</option></select>
+        <a class="botao secundario" href="registrar.html" data-manter-campus>Achou algo? Registre aqui</a>
+      </div>
+    </section>
+
     <p class="info" id="info-cae" hidden></p>
-    <div id="mensagem"></div>
-    <div id="resultados"></div>
-    <button id="mais" type="button" hidden>Ver mais</button>
+
+    <section aria-labelledby="titulo-resultados">
+      <h2 id="titulo-resultados">Encontrados recentemente</h2>
+      <div id="mensagem" aria-live="polite"></div>
+      <div id="resultados" class="lista"></div>
+      <div class="acoes"><button id="mais" type="button" class="secundario" hidden>Ver mais itens</button></div>
+    </section>
+
+    <section aria-labelledby="titulo-como">
+      <h2 id="titulo-como">Como funciona</h2>
+      <ol class="passos">
+        <li><strong>Perdeu?</strong> Procure aqui pela descrição ou pela categoria. Se não achar, volte mais tarde: novos itens chegam todo dia.</li>
+        <li><strong>Achou?</strong> Registre o item em menos de um minuto, para o dono conseguir encontrá-lo.
+          <a class="botao" href="registrar.html" data-manter-campus>Achei um item</a></li>
+        <li><strong>Retirada e entrega na CAE.</strong> <span id="passo-retirada">Leve o item encontrado ou retire o seu na CAE do campus.</span></li>
+      </ol>
+    </section>
   </main>
+
+  <footer class="rodape">
+    <div class="rodape-conteudo">
+      <p>Projeto acadêmico desenvolvido por alunos do IFSP.</p>
+      <p id="rodape-campus"></p>
+    </div>
+  </footer>
+
+  <script src="js/config.js"></script>
   <script src="js/api.js"></script>
   <script src="js/campus.js"></script>
   <script src="js/buscar.js"></script>

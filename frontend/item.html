@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Item encontrado — Achei Aqui</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <a class="pular" href="#conteudo">Pular para o conteúdo</a>
+  <header class="topo">
+    <div class="topo-conteudo">
+      <a class="marca" href="index.html" data-manter-campus>Achei Aqui</a>
+      <nav class="menu" aria-label="Principal">
+        <a href="index.html" data-manter-campus>Buscar</a>
+        <a href="registrar.html" data-manter-campus>Achei um item</a>
+        <a href="cae/login.html">Área da CAE</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="conteudo">
+    <p><a href="index.html" data-manter-campus>← Voltar para a busca</a></p>
+    <div id="mensagem" aria-live="polite"></div>
+
+    <article id="item" class="cartao" hidden aria-labelledby="item-descricao">
+      <span class="etiqueta" id="item-categoria" hidden></span>
+      <h1 id="item-descricao"></h1>
+      <dl class="detalhes">
+        <dt>Onde foi encontrado</dt><dd id="item-local"></dd>
+        <dt>Quando</dt><dd id="item-quando"></dd>
+        <dt>Campus</dt><dd id="item-campus"></dd>
+      </dl>
+      <p class="info"><strong>É seu?</strong> Vá até a CAE para retirar. <span id="item-retirada"></span></p>
+      <div class="acoes">
+        <button id="compartilhar" type="button" class="secundario">Compartilhar</button>
+      </div>
+      <p class="dica" id="aviso-compartilhar" aria-live="polite"></p>
+    </article>
+  </main>
+
+  <footer class="rodape">
+    <div class="rodape-conteudo">
+      <p>Projeto acadêmico desenvolvido por alunos do IFSP.</p>
+      <p id="rodape-campus"></p>
+    </div>
+  </footer>
+
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/campus.js"></script>
+  <script src="js/item.js"></script>
+</body>
+</html>

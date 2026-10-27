@@ -1,21 +1,212 @@
-:root{--cor:#1f5fbf;--fundo:#f5f7fa;--borda:#d8dee6;--texto:#1c2430}
-*{box-sizing:border-box}
-body{margin:0;font-family:system-ui,sans-serif;background:var(--fundo);color:var(--texto);line-height:1.5}
-header{background:var(--cor);color:#fff;padding:.75rem 1rem;display:flex;flex-wrap:wrap;gap:.5rem 1.25rem;align-items:center}
-header strong{font-size:1.15rem;margin-right:auto}
-header a{color:#fff;text-decoration:none}
-header a:hover{text-decoration:underline}
-header .campus{display:flex;align-items:center;gap:.4rem;margin:0;font-weight:400}
-header select{font:inherit;padding:.25rem .4rem;border:0;border-radius:6px;max-width:16rem}
-main{max-width:720px;margin:0 auto;padding:1rem}
-form,.card,.info{background:#fff;border:1px solid var(--borda);border-radius:8px;padding:1rem;margin-bottom:.75rem}
-label{display:block;font-weight:600;margin:.75rem 0 .25rem}
-small{color:#5b6573}
-input,textarea,button{width:100%;font:inherit;padding:.6rem;border:1px solid var(--borda);border-radius:6px}
-button{background:var(--cor);color:#fff;border:0;cursor:pointer;margin-top:1rem}
-button:disabled{opacity:.6;cursor:wait}
-.busca{display:flex;gap:.5rem}.busca button{width:auto;margin:0}
-.meta{color:#5b6573;font-size:.9rem;margin:.25rem 0 0}
-.msg{padding:.6rem .8rem;border-radius:6px;margin:.75rem 0}
-.ok{background:#e3f6e8}.erro{background:#fde8e8}.aviso{background:#eef2f7}
-.info{background:#fff8e1}
+/* ==========================================================================
+   Achei Aqui — estilos
+   1. Variáveis  2. Base  3. Cabeçalho e rodapé  4. Componentes  5. Páginas
+   Cores: verde do IFSP (#2f9e41) no cabeçalho e nos destaques. Texto pequeno branco vai sobre
+   os tons mais escuros do mesmo verde, para passar no contraste WCAG AA (4,5:1).
+   ========================================================================== */
+
+/* 1. Variáveis ------------------------------------------------------------ */
+:root {
+  --verde: #2f9e41;          /* verde oficial: cabeçalho, bordas, destaques */
+  --verde-botao: #278537;    /* fundo de botão com texto branco (4,67:1) */
+  --verde-escuro: #1f6b2c;   /* links, menu, botão ao passar o mouse (6,57:1 com branco) */
+  --verde-claro: #eaf6ec;    /* fundos suaves */
+  --verde-etiqueta: #1c5e27; /* texto das etiquetas sobre o verde claro */
+  --branco: #ffffff;
+  --fundo: #f4f7f5;
+  --borda: #d5ded8;
+  --texto: #1c2430;
+  --texto-suave: #4f5a66;
+  --erro-fundo: #fdecec;
+  --erro-texto: #8a1c1c;
+  --aviso-fundo: #eef2f7;
+  --info-fundo: #fff8e1;
+  --raio: 10px;
+  --sombra: 0 1px 3px rgba(28, 36, 48, .08);
+  --largura: 760px;
+}
+
+/* 2. Base ----------------------------------------------------------------- */
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  font-family: "Open Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 1rem;
+  line-height: 1.55;
+  color: var(--texto);
+  background: var(--fundo);
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+main { width: 100%; max-width: var(--largura); margin: 0 auto; padding: 1.25rem 1rem 2.5rem; flex: 1; }
+h1, h2, h3 { line-height: 1.25; margin: 0 0 .5rem; }
+h1 { font-size: 1.75rem; font-weight: 700; }
+h2 { font-size: 1.25rem; font-weight: 700; margin-top: 1.75rem; }
+h3 { font-size: 1.05rem; font-weight: 700; margin-top: 1rem; }
+p { margin: 0 0 .75rem; }
+a { color: var(--verde-escuro); font-weight: 600; }
+a:hover { text-decoration-thickness: 2px; }
+:focus-visible { outline: 3px solid var(--texto); outline-offset: 2px; border-radius: 4px; }
+[hidden] { display: none !important; }
+.visualmente-oculto {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+}
+.pular { position: absolute; left: -999px; top: .5rem; z-index: 10; background: var(--branco); color: var(--verde-escuro); padding: .5rem .8rem; border-radius: 6px; }
+.pular:focus { left: 1rem; }
+
+/* 3. Cabeçalho e rodapé --------------------------------------------------- */
+.topo { background: var(--verde); color: var(--branco); }
+.topo-conteudo {
+  max-width: var(--largura); margin: 0 auto; padding: .75rem 1rem;
+  display: flex; flex-wrap: wrap; align-items: center; gap: .6rem 1rem;
+}
+.marca { color: var(--branco); font-size: 1.5rem; font-weight: 700; text-decoration: none; margin-right: auto; }
+.marca:focus-visible { outline-color: var(--branco); }
+.menu { display: flex; flex-wrap: wrap; gap: .4rem; }
+.menu a {
+  background: var(--verde-escuro); color: var(--branco); text-decoration: none;
+  font-size: .95rem; font-weight: 600; padding: .4rem .8rem; border-radius: 999px; line-height: 1.4;
+}
+.menu a:hover, .menu a[aria-current="page"] { background: var(--texto); }
+.menu a:focus-visible { outline-color: var(--branco); }
+.seletor-campus {
+  display: flex; align-items: center; gap: .4rem; margin: 0;
+  font-size: .95rem; font-weight: 600; color: var(--branco);
+  background: var(--verde-escuro); border-radius: 999px; padding: .2rem .25rem .2rem .8rem;
+}
+.seletor-campus select { width: auto; max-width: 15rem; padding: .25rem .5rem; border: 0; border-radius: 999px; }
+.campus-cae {
+  font-weight: 600; font-size: .95rem; color: var(--branco);
+  background: var(--verde-escuro); border-radius: 999px; padding: .4rem .8rem; line-height: 1.4;
+}
+
+.rodape { background: var(--branco); border-top: 4px solid var(--verde); }
+.rodape-conteudo {
+  max-width: var(--largura); margin: 0 auto; padding: 1rem;
+  display: flex; flex-wrap: wrap; justify-content: space-between; gap: .25rem 1rem;
+  font-size: .9rem; color: var(--texto-suave);
+}
+.rodape p { margin: 0; }
+
+/* 4. Componentes ---------------------------------------------------------- */
+/* Botões */
+button, .botao {
+  display: inline-block; font: inherit; font-weight: 700; text-align: center; text-decoration: none;
+  background: var(--verde-botao); color: var(--branco);
+  border: 2px solid var(--verde-botao); border-radius: 8px;
+  padding: .6rem 1.1rem; cursor: pointer; line-height: 1.3;
+}
+button:hover, .botao:hover { background: var(--verde-escuro); border-color: var(--verde-escuro); color: var(--branco); }
+button:disabled { opacity: .6; cursor: wait; }
+button.secundario, .botao.secundario { background: var(--branco); color: var(--verde-escuro); border-color: var(--verde-escuro); }
+button.secundario:hover, .botao.secundario:hover { background: var(--verde-claro); color: var(--verde-escuro); }
+.acoes { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 1rem; }
+
+/* Formulários */
+label { display: block; font-weight: 600; margin: .9rem 0 .3rem; }
+input, textarea, select {
+  width: 100%; font: inherit; color: var(--texto); background: var(--branco);
+  padding: .6rem .7rem; border: 1px solid #8a9a90; border-radius: 8px;
+}
+textarea { resize: vertical; }
+input:focus-visible, textarea:focus-visible, select:focus-visible { outline-offset: 0; }
+.opcional, .dica { color: var(--texto-suave); font-weight: 400; }
+.dica { font-size: .9rem; margin: .3rem 0 0; }
+.mais-detalhes { margin-top: .9rem; }
+.mais-detalhes summary { cursor: pointer; color: var(--verde-escuro); font-weight: 600; }
+form > button[type="submit"] { width: 100%; margin-top: 1.25rem; }
+
+/* Cartões e listas */
+.cartao {
+  display: block; background: var(--branco); border: 1px solid var(--borda); border-radius: var(--raio);
+  padding: 1rem 1.1rem; margin-bottom: .75rem; box-shadow: var(--sombra);
+}
+.lista { display: grid; gap: .6rem; }
+.lista .cartao { margin: 0; }
+.cartao-link { color: var(--texto); text-decoration: none; font-weight: 400; border-left: 5px solid var(--verde); }
+.cartao-link:hover { border-left-color: var(--verde-escuro); background: #fbfdfb; }
+.cartao-titulo { display: block; font-weight: 700; font-size: 1.05rem; margin-bottom: .25rem; }
+.cartao-link .cartao-titulo { color: var(--verde-escuro); text-decoration: underline; text-underline-offset: 3px; }
+.meta { display: block; color: var(--texto-suave); font-size: .92rem; margin: .15rem 0 0; }
+.etiqueta {
+  display: inline-block; background: var(--verde-claro); color: var(--verde-etiqueta);
+  font-size: .8rem; font-weight: 700; padding: .1rem .55rem; border-radius: 999px; margin: .1rem 0;
+}
+.etiqueta.devolvido { background: var(--aviso-fundo); color: var(--texto-suave); }
+
+/* Mensagens */
+.msg { padding: .7rem .9rem; border-radius: 8px; margin: .75rem 0; }
+.msg.ok { background: var(--verde-claro); }
+.msg.erro { background: var(--erro-fundo); color: var(--erro-texto); }
+.msg.aviso { background: var(--aviso-fundo); }
+.msg button { display: block; margin: .5rem 0 0; }
+.info { background: var(--info-fundo); border: 1px solid #f0dfa6; border-radius: 8px; padding: .7rem .9rem; margin: .75rem 0; }
+
+/* Passos (Como funciona / E agora?) */
+.passos { list-style: none; counter-reset: passo; padding: 0; margin: .5rem 0 0; display: grid; gap: .6rem; }
+.passos li {
+  counter-increment: passo; position: relative; background: var(--branco);
+  border: 1px solid var(--borda); border-radius: var(--raio); padding: .8rem 1rem .8rem 3.2rem;
+}
+.passos li::before {
+  content: counter(passo); position: absolute; left: .9rem; top: .75rem;
+  width: 1.7rem; height: 1.7rem; border-radius: 50%; background: var(--verde-botao); color: var(--branco);
+  font-weight: 700; display: grid; place-items: center;
+}
+.passos .botao { display: table; margin-top: .5rem; }
+
+/* Diálogo */
+dialog {
+  border: 0; border-radius: var(--raio); padding: 1.25rem; width: min(92vw, 28rem);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, .25);
+}
+dialog::backdrop { background: rgba(28, 36, 48, .55); }
+dialog h2 { margin-top: 0; }
+dialog .acoes { justify-content: flex-end; }
+
+/* 5. Páginas -------------------------------------------------------------- */
+/* Início */
+.destaque {
+  background: var(--branco); border: 1px solid var(--borda); border-top: 5px solid var(--verde);
+  border-radius: var(--raio); padding: 1.25rem 1.1rem; box-shadow: var(--sombra);
+}
+.destaque p { color: var(--texto-suave); }
+.busca { display: flex; gap: .5rem; }
+.busca input { flex: 1; min-width: 0; }
+.busca > button[type="submit"] { flex: none; width: auto; margin-top: 0; }
+.linha-filtros { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem 1rem; margin-top: .9rem; }
+.linha-filtros label { margin: 0; }
+.linha-filtros select { width: auto; min-width: 12rem; }
+.linha-filtros .botao { margin-left: auto; }
+.subtitulo { color: var(--texto-suave); }
+
+/* Detalhe do item */
+.detalhes { display: grid; grid-template-columns: max-content 1fr; gap: .35rem 1rem; margin: 1rem 0; }
+.detalhes dt { font-weight: 600; color: var(--texto-suave); }
+.detalhes dd { margin: 0; }
+
+/* Registro concluído */
+.sucesso { border-left: 5px solid var(--verde); }
+.sucesso h2 { margin-top: 0; color: var(--verde-escuro); }
+
+/* Painel da CAE */
+.filtros-painel { display: grid; grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); gap: 0 .75rem; align-items: end; }
+.filtros-painel label { margin-top: .4rem; }
+.filtros-painel button { margin-top: .75rem; }
+.cartao-cae .cabeca { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: start; gap: .25rem .75rem; }
+
+/* Login */
+.caixa-login { max-width: 26rem; margin: 1rem auto; }
+
+@media (max-width: 480px) {
+  h1 { font-size: 1.5rem; }
+  .marca { font-size: 1.3rem; }
+  .busca { flex-direction: column; }
+  .linha-filtros select { width: 100%; }
+  .linha-filtros .botao { margin-left: 0; width: 100%; }
+  .detalhes { grid-template-columns: 1fr; gap: .1rem; }
+  .detalhes dd { margin-bottom: .5rem; }
+}

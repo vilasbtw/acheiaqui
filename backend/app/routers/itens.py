@@ -64,6 +64,7 @@ def registrar_item(dados: ItemCriar, sessao: Session = Depends(obter_sessao)):
 def buscar_itens(
     campus: str = Query(max_length=10, description="Sigla do campus: o feed é sempre de um campus (D22)"),
     q: Optional[str] = Query(default=None, max_length=100, description="Palavras da busca"),
+    categoria_id: Optional[int] = Query(default=None, ge=1, description="Filtra por categoria"),
     limit: int = Query(default=20, ge=1, le=50),
     offset: int = Query(default=0, ge=0),
     sessao: Session = Depends(obter_sessao),
@@ -79,6 +80,8 @@ def buscar_itens(
         .options(contains_eager(Item.categoria), joinedload(Item.campus))
         .filter(Item.campus_id == escolhido.id, Item.status == "disponivel")
     )
+    if categoria_id is not None:
+        consulta = consulta.filter(Item.categoria_id == categoria_id)
     if q and q.strip():
         consulta = aplicar_busca(consulta, q)
     else:

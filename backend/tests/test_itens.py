@@ -166,3 +166,27 @@ def test_detalhe_do_item(client, payload):
 
 def test_detalhe_de_item_inexistente(client):
     assert client.get("/itens/999").status_code == 404
+
+
+# ---------- Filtro por categoria (Etapa 2) ----------
+
+def test_filtro_por_categoria(client, payload, id_categoria):
+    client.post("/itens", json=payload(descricao="Carteira preta", categoria_id=id_categoria("Documentos")))
+    client.post("/itens", json=payload(descricao="Fone de ouvido", categoria_id=id_categoria("Eletrônicos")))
+    client.post("/itens", json=payload(descricao="Garrafa sem categoria"))
+    resultado = client.get("/itens", params={"campus": "tsta", "categoria_id": id_categoria("Eletrônicos")}).json()
+    assert [i["descricao"] for i in resultado] == ["Fone de ouvido"]
+
+
+def test_filtro_por_categoria_junto_com_a_busca(client, payload, id_categoria):
+    docs = id_categoria("Documentos")
+    client.post("/itens", json=payload(descricao="Carteira preta", categoria_id=docs))
+    client.post("/itens", json=payload(descricao="Carteira de couro", categoria_id=id_categoria("Bolsas e mochilas")))
+    resultado = client.get("/itens", params={"campus": "tsta", "q": "carteira", "categoria_id": docs}).json()
+    assert [i["descricao"] for i in resultado] == ["Carteira preta"]
+
+
+def test_filtro_por_categoria_invalida(client):
+    assert client.get("/itens", params={"campus": "tsta", "categoria_id": 999}).json() == []
+    assert client.get("/itens", params={"campus": "tsta", "categoria_id": 0}).status_code == 422
+    assert client.get("/itens", params={"campus": "tsta", "categoria_id": "abc"}).status_code == 422

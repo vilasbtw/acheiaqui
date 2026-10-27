@@ -26,8 +26,8 @@ Outras variáveis:
 
 - `TEST_DATABASE_URL`: só em testes (esteira e computador). Aceita apenas banco local.
 - `PORT`: o Render define sozinho. Não cadastrar.
-- Frontend: **não usa variáveis**. O endereço da API está em `frontend/js/api.js` (escolhe local ou produção sozinho)
-  e o endereço do Supabase com a chave pública está em `frontend/js/auth.js`.
+- Frontend: **não usa variáveis**. Os endereços da API e do Supabase (com a chave pública) ficam em
+  `frontend/js/config.js`, que escolhe sozinho entre local (`TESTES`) e produção (`PRODUCAO`).
 
 ## Deploy
 
@@ -97,7 +97,7 @@ vazou (Git, print, zip, conversa), faça isso na hora e depois descubra como vaz
 | --- | --- | --- | --- |
 | Senha do banco | Supabase, Project Settings, Database, redefinir a senha (só letras e números) | `DATABASE_URL` no Render e nos arquivos `backend/.env` e `backend/.env.prod` | `/saude` |
 | Chave da IA | Painel do provedor: criar a nova e apagar a antiga | `IA_API_KEY` no Render e em `backend/.env` | `python backend/scripts/testar_ia.py` |
-| Chave pública do Supabase (`SUPABASE_ANON_KEY`) | Supabase, Project Settings, API | `SUPABASE_ANON_KEY` no Render **e** a constante em `frontend/js/auth.js` (novo deploy na Vercel) | Login da CAE |
+| Chave pública do Supabase (`SUPABASE_ANON_KEY`) | Supabase, Project Settings, API | `SUPABASE_ANON_KEY` no Render **e** `PRODUCAO` em `frontend/js/config.js` (novo deploy na Vercel) | Login da CAE |
 | Chaves secretas do Supabase (`service_role` e semelhantes) | O sistema **não usa**. Se alguma aparecer no Git, gere outra no painel | Nenhum lugar | Gitleaks verde |
 | Senha de uma conta da CAE | Supabase, Authentication, Users | A pessoa recebe a nova | Login |
 
@@ -124,6 +124,16 @@ Uma pessoa pertence a um campus só (`UNIQUE`). Para mudar de campus, faça um `
 **No deploy da Etapa 1**, as contas da CAE que já existem em produção precisam dessa linha antes de o backend novo
 entrar no ar; senão, ninguém da CAE consegue abrir o painel.
 
+### Testar com o banco de testes no computador (e provar o isolamento entre campi)
+
+1. Em `frontend/js/config.js`, preencha `TESTES.supabaseUrl` e `TESTES.supabaseChave` com os do projeto de testes
+   (Project Settings, API; a chave **publishable**, nunca a secreta). Com eles vazios, o login local usa a produção.
+2. O `backend/.env` precisa apontar para o **mesmo** projeto (`DATABASE_URL`, `SUPABASE_URL`, `SUPABASE_ANON_KEY`).
+3. No banco de testes, crie duas contas em Authentication, Users e vincule uma a `tsta` e outra a `tstb`
+   (o seed `db/seeds/dev_campi_teste.sql` cria esses campi). Registre um item em cada campus pelo site.
+4. Com o backend (`uvicorn app.main:app --reload`) e o frontend (`python -m http.server 5500`) rodando, entre com
+   cada conta: cada uma só vê os itens do próprio campus.
+
 ## Como recriar o banco
 
 Serve para voltar de um desastre ou para criar o projeto de desenvolvimento.
@@ -145,7 +155,7 @@ Serve para voltar de um desastre ou para criar o projeto de desenvolvimento.
    ```
 
 6. Se for um projeto novo de **produção**: atualize `DATABASE_URL`, `SUPABASE_URL` e `SUPABASE_ANON_KEY` no Render
-   e as constantes de `frontend/js/auth.js` (novo deploy na Vercel). O endereço do projeto é diferente em cada projeto.
+   e o `PRODUCAO` de `frontend/js/config.js` (novo deploy na Vercel), e o `connect-src` do `frontend/vercel.json`.
 7. Confira com `python backend/scripts/verificar_supabase.py` (lê o `backend/.env`; coloque ali os valores do projeto novo
    enquanto testa), depois `/saude`, busca, login da CAE e uma devolução de teste.
 

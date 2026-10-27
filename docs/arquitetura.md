@@ -29,7 +29,7 @@ flowchart LR
 
 | Camada | Onde | O que faz | Pasta |
 | --- | --- | --- | --- |
-| Frontend | Vercel (sem build) | Telas públicas (`index`, `registrar`) e da CAE (`cae/login`, `cae/painel`). Seletor de campus no cabeçalho (`js/campus.js`): vem de `?campus=` ou da última escolha guardada no navegador; com um só campus ativo, já vem escolhido. Só fala com a API; usa o Supabase apenas para o login | `frontend/` |
+| Frontend | Vercel (sem build) | Telas públicas (`index` com busca e filtro por categoria, `registrar`, `item` com o detalhe e o botão Compartilhar) e da CAE (`cae/login`, `cae/painel`). Verde do IFSP e Open Sans. Seletor de campus no cabeçalho (`js/campus.js`): vem de `?campus=` ou da última escolha guardada no navegador; com um só campus ativo, já vem escolhido. Endereços em `js/config.js`. Só fala com a API; usa o Supabase apenas para o login | `frontend/` |
 | API | Render | Regras, validação, busca, chamada à IA, autorização da CAE. Camadas internas: `routers` → `services` → `models` (+ `schemas` para entrada e saída) | `backend/app/` |
 | Dados | Supabase | Tabelas `campi`, `cae_membros`, `categorias`, `itens`, `devolucoes` (+ `schema_migrations`) e o Auth. RLS ligado, sem policies: a API REST do Supabase não expõe nada | `db/migrations/` |
 

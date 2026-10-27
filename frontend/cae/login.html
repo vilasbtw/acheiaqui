@@ -4,22 +4,46 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Login da CAE — Achei Aqui</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap">
   <link rel="stylesheet" href="../css/style.css">
 </head>
 <body>
-  <header><strong>Achei Aqui</strong><a href="../index.html">Voltar ao site</a></header>
-  <main>
-    <h1>Área da CAE</h1>
-    <form id="form-login">
-      <label for="email">E-mail</label>
-      <input id="email" type="email" autocomplete="username" required>
-      <label for="senha">Senha</label>
-      <input id="senha" type="password" autocomplete="current-password" required>
-      <button id="entrar" type="submit">Entrar</button>
-    </form>
-    <div id="mensagem"></div>
+  <a class="pular" href="#conteudo">Pular para o conteúdo</a>
+  <header class="topo">
+    <div class="topo-conteudo">
+      <a class="marca" href="../index.html">Achei Aqui</a>
+      <nav class="menu" aria-label="Principal">
+        <a href="../index.html">Voltar ao site</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="conteudo">
+    <div class="caixa-login">
+      <h1>Área da CAE</h1>
+      <p class="subtitulo">Acesso só para a equipe da CAE. As contas são criadas pela administração do sistema.</p>
+      <form id="form-login" class="cartao">
+        <label for="email">E-mail</label>
+        <input id="email" type="email" autocomplete="username" required>
+        <label for="senha">Senha</label>
+        <input id="senha" type="password" autocomplete="current-password" required>
+        <button id="entrar" type="submit">Entrar</button>
+      </form>
+      <div id="mensagem" aria-live="polite"></div>
+    </div>
   </main>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <footer class="rodape">
+    <div class="rodape-conteudo">
+      <p>Projeto acadêmico desenvolvido por alunos do IFSP.</p>
+    </div>
+  </footer>
+
+  <script src="../js/config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js"
+    integrity="sha384-TcHRA3zBbn+Lexh5n+Oil4guNPOS3rjNDpGRAN46u/s/mB2IZ50ceC6TYDU2yvgK" crossorigin="anonymous"></script>
   <script src="../js/auth.js"></script>
   <script src="../js/login.js"></script>
 </body>

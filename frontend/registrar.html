@@ -3,29 +3,78 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Registrar item encontrado — Achei Aqui</title>
+  <title>Achei um item — Achei Aqui</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-  <header><strong>Achei Aqui</strong><label class="campus">Campus <select id="campus" disabled><option>Carregando…</option></select></label><a href="index.html" data-manter-campus>Buscar</a><a href="registrar.html" data-manter-campus>Registrei um item</a><a href="cae/login.html">Área da CAE</a></header>
-  <main>
-    <h1>Encontrou um item?</h1>
+  <a class="pular" href="#conteudo">Pular para o conteúdo</a>
+  <header class="topo">
+    <div class="topo-conteudo">
+      <a class="marca" href="index.html" data-manter-campus>Achei Aqui</a>
+      <nav class="menu" aria-label="Principal">
+        <a href="index.html" data-manter-campus>Buscar</a>
+        <a href="registrar.html" data-manter-campus aria-current="page">Achei um item</a>
+        <a href="cae/login.html">Área da CAE</a>
+      </nav>
+      <label class="seletor-campus">Campus
+        <select id="campus" disabled><option>Carregando…</option></select>
+      </label>
+    </div>
+  </header>
+
+  <main id="conteudo">
+    <h1>Achou um item?</h1>
+    <p class="subtitulo">Registre aqui em menos de um minuto e depois entregue o item na CAE. Assim o dono consegue encontrá-lo pela busca.</p>
     <p class="info" id="info-cae" hidden></p>
-    <form id="form-registro">
+
+    <form id="form-registro" class="cartao">
       <label for="descricao">O que você encontrou?</label>
-      <textarea id="descricao" rows="3" minlength="3" maxlength="1000" required placeholder="Ex.: garrafa térmica azul com adesivo"></textarea>
-      <label for="local">Onde encontrou?</label>
+      <textarea id="descricao" rows="2" minlength="3" maxlength="1000" required placeholder="Ex.: garrafa térmica azul com adesivo"></textarea>
+
+      <label for="local">Onde?</label>
       <input id="local" list="locais" minlength="2" maxlength="100" required placeholder="Ex.: Biblioteca">
       <datalist id="locais"><option value="Biblioteca"><option value="Cantina"><option value="Pátio"><option value="Quadra"><option value="Bloco A"><option value="Bloco B"><option value="Laboratório de informática"><option value="Estacionamento"></datalist>
-      <label for="encontrado_em">Quando encontrou?</label>
-      <input id="encontrado_em" type="datetime-local" required>
-      <label for="contato">Seu contato <small>(opcional)</small></label>
-      <input id="contato" maxlength="100" placeholder="Nome, e-mail ou telefone">
-      <small>Usado só pela CAE, caso precise falar com você. Não aparece na busca pública.</small>
+
+      <label for="contato">Seu contato <span class="opcional">(opcional)</span></label>
+      <input id="contato" maxlength="100" placeholder="Nome, e-mail ou telefone" autocomplete="off" aria-describedby="dica-contato">
+      <p class="dica" id="dica-contato">Só a CAE vê o seu contato. Ele não aparece na busca.</p>
+
+      <details class="mais-detalhes" id="detalhes-quando">
+        <summary>Encontrou em outro dia ou horário?</summary>
+        <label for="encontrado_em">Quando encontrou?</label>
+        <input id="encontrado_em" type="datetime-local" required>
+      </details>
+
       <button id="enviar" type="submit">Registrar item</button>
     </form>
-    <div id="mensagem"></div>
+    <div id="mensagem" aria-live="polite"></div>
+
+    <section id="sucesso" class="cartao sucesso" hidden tabindex="-1" aria-labelledby="titulo-sucesso">
+      <h2 id="titulo-sucesso">Item registrado. Obrigado!</h2>
+      <p id="sucesso-resumo"></p>
+      <h3>E agora?</h3>
+      <ol class="passos">
+        <li><strong>Leve o item até a CAE.</strong> <span id="sucesso-retirada"></span></li>
+        <li><strong>Pronto.</strong> O item já aparece na busca do campus, e o dono vai até a CAE para retirá-lo.</li>
+      </ol>
+      <div class="acoes">
+        <button id="registrar-outro" type="button">Registrar outro item</button>
+        <a id="ver-item" class="botao secundario" href="index.html">Ver como ficou</a>
+      </div>
+    </section>
   </main>
+
+  <footer class="rodape">
+    <div class="rodape-conteudo">
+      <p>Projeto acadêmico desenvolvido por alunos do IFSP.</p>
+      <p id="rodape-campus"></p>
+    </div>
+  </footer>
+
+  <script src="js/config.js"></script>
   <script src="js/api.js"></script>
   <script src="js/campus.js"></script>
   <script src="js/registrar.js"></script>

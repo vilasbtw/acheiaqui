@@ -1,8 +1,5 @@
-// Login da CAE via Supabase Auth. Esta chave é PÚBLICA por design (publishable key): não é segredo.
-// Nunca coloque aqui a "secret key" nem a "service_role".
-const SUPABASE_URL = "https://ltfdwsvxhgunifdzaclt.supabase.co";
-const SUPABASE_CHAVE_PUBLICA = "sb_publishable_9pMe1E7mE8-KCpRxcRDhEg_curzxD7_";
-const supabaseCliente = window.supabase.createClient(SUPABASE_URL, SUPABASE_CHAVE_PUBLICA);
+// Login da CAE via Supabase Auth. Os endereços e a chave pública ficam em js/config.js.
+const supabaseCliente = window.supabase.createClient(CONFIG.supabaseUrl, CONFIG.supabaseChave);
 
 async function tokenAtual() {
   const { data } = await supabaseCliente.auth.getSession();

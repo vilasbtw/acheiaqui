@@ -1,7 +1,7 @@
 // Campus escolhido (D22): vem do ?campus= da URL ou da última escolha guardada no navegador.
 // Se só existe um campus ativo, ele já vem escolhido.
 const CHAVE_CAMPUS = "acheiaqui.campus";
-const TEXTO_RETIRADA_PADRAO = "Para retirar ou entregar um item, procure a CAE do seu campus.";
+const TEXTO_RETIRADA_PADRAO = "Procure a CAE do seu campus.";
 
 function campusGuardado() {
   try { return localStorage.getItem(CHAVE_CAMPUS); } catch (e) { return null; }
@@ -19,10 +19,19 @@ function guardarCampus(sigla) {
   });
 }
 
-function mostrarRetirada(campus) {
+function textoRetirada(campus) {
+  return campus.info_retirada || TEXTO_RETIRADA_PADRAO;
+}
+
+// Caixa amarela com o texto de retirada e o nome do campus no rodapé.
+function mostrarCampus(campus) {
   const caixa = document.getElementById("info-cae");
-  caixa.hidden = !campus;
-  if (campus) caixa.textContent = campus.nome + ": " + (campus.info_retirada || TEXTO_RETIRADA_PADRAO);
+  if (caixa) {
+    caixa.hidden = !campus;
+    if (campus) caixa.textContent = "Retirada e entrega no campus " + campus.nome + ": " + textoRetirada(campus);
+  }
+  const rodape = document.getElementById("rodape-campus");
+  if (rodape) rodape.textContent = campus ? "Campus " + campus.nome : "";
 }
 
 // Preenche o seletor do cabeçalho e chama aoEscolher(campus) agora e a cada troca (campus = null se não há escolha).
@@ -55,11 +64,11 @@ async function iniciarCampus(aoEscolher, aoFalhar) {
   seletor.addEventListener("change", () => {
     const campus = campi.find((c) => c.sigla === seletor.value);
     guardarCampus(campus.sigla);
-    mostrarRetirada(campus);
+    mostrarCampus(campus);
     aoEscolher(campus);
   });
 
   if (escolhido) guardarCampus(escolhido.sigla);
-  mostrarRetirada(escolhido);
+  mostrarCampus(escolhido);
   aoEscolher(escolhido);
 }

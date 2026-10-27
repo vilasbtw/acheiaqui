@@ -4,26 +4,70 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Painel da CAE — Achei Aqui</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap">
   <link rel="stylesheet" href="../css/style.css">
 </head>
 <body>
-  <header><strong>Achei Aqui · CAE</strong><span id="campus-cae"></span><a href="../index.html" id="site-publico">Site público</a><a href="#" id="sair">Sair</a></header>
-  <main>
+  <a class="pular" href="#conteudo">Pular para o conteúdo</a>
+  <header class="topo">
+    <div class="topo-conteudo">
+      <a class="marca" href="painel.html">Achei Aqui · CAE</a>
+      <span class="campus-cae" id="campus-cae"></span>
+      <nav class="menu" aria-label="Principal">
+        <a href="../index.html" id="site-publico">Site público</a>
+        <a href="#" id="sair">Sair</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="conteudo">
     <h1>Itens registrados</h1>
-    <form id="form-filtros">
-      <label for="status">Status</label>
-      <select id="status"><option value="">Todos</option><option value="disponivel">Disponíveis</option><option value="devolvido">Devolvidos</option></select>
-      <label for="data_inicio">Encontrados a partir de</label>
-      <input id="data_inicio" type="date">
-      <label for="data_fim">Encontrados até</label>
-      <input id="data_fim" type="date">
-      <button type="submit">Filtrar</button>
+    <form id="form-filtros" class="cartao filtros-painel" aria-label="Filtros">
+      <div>
+        <label for="status">Status</label>
+        <select id="status"><option value="">Todos</option><option value="disponivel">Disponíveis</option><option value="devolvido">Devolvidos</option></select>
+      </div>
+      <div>
+        <label for="data_inicio">Encontrados de</label>
+        <input id="data_inicio" type="date">
+      </div>
+      <div>
+        <label for="data_fim">até</label>
+        <input id="data_fim" type="date">
+      </div>
+      <div><button type="submit">Filtrar</button></div>
     </form>
-    <div id="mensagem"></div>
-    <div id="resultados"></div>
-    <button id="mais" type="button" hidden>Ver mais</button>
+    <div id="mensagem" aria-live="polite"></div>
+    <div id="resultados" class="lista"></div>
+    <div class="acoes"><button id="mais" type="button" class="secundario" hidden>Ver mais itens</button></div>
+
+    <dialog id="dialogo-devolucao" aria-labelledby="titulo-devolucao">
+      <form id="form-devolucao" method="dialog">
+        <h2 id="titulo-devolucao">Registrar devolução</h2>
+        <p id="dialogo-item"></p>
+        <label for="nome_retirante">Nome de quem está retirando</label>
+        <input id="nome_retirante" minlength="2" maxlength="100" required autocomplete="off">
+        <p class="dica">Confira um documento com foto antes de entregar.</p>
+        <p id="dialogo-erro" class="msg erro" hidden></p>
+        <div class="acoes">
+          <button type="button" class="secundario" id="cancelar-devolucao">Cancelar</button>
+          <button type="submit" id="confirmar-devolucao">Confirmar devolução</button>
+        </div>
+      </form>
+    </dialog>
   </main>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <footer class="rodape">
+    <div class="rodape-conteudo">
+      <p>Projeto acadêmico desenvolvido por alunos do IFSP.</p>
+    </div>
+  </footer>
+
+  <script src="../js/config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js"
+    integrity="sha384-TcHRA3zBbn+Lexh5n+Oil4guNPOS3rjNDpGRAN46u/s/mB2IZ50ceC6TYDU2yvgK" crossorigin="anonymous"></script>
   <script src="../js/api.js"></script>
   <script src="../js/auth.js"></script>
   <script src="../js/painel.js"></script>

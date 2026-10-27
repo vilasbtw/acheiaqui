@@ -4,6 +4,12 @@ let deslocamento = 0;
 const lista = document.getElementById("resultados");
 const mensagem = document.getElementById("mensagem");
 const botaoMais = document.getElementById("mais");
+const dialogo = document.getElementById("dialogo-devolucao");
+const formDevolucao = document.getElementById("form-devolucao");
+const campoNome = document.getElementById("nome_retirante");
+const erroDialogo = document.getElementById("dialogo-erro");
+const botaoConfirmar = document.getElementById("confirmar-devolucao");
+let devolucaoAtual = null; // { item, card } do item que está no diálogo
 
 function mostrar(texto, tipo) { mensagem.textContent = texto; mensagem.className = texto ? "msg " + tipo : ""; }
 function formatarData(iso) { return iso.split("-").reverse().join("/"); } // evita deslocar o dia por fuso
@@ -24,46 +30,59 @@ async function chamarCae(caminho, opcoes = {}) {
 }
 
 function criarCard(item) {
-  const card = document.createElement("div");
-  card.className = "card";
-  const titulo = document.createElement("strong");
-  titulo.textContent = item.descricao;
-  const quando = new Date(item.encontrado_em).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" });
-  const linhas = [
-    "Local: " + item.local_encontrado + " · Encontrado em: " + quando + (item.categoria ? " · Categoria: " + item.categoria : ""),
-    "Contato de quem achou: " + (item.contato_achador || "não informado"),
-    item.devolucao
-      ? "Devolvido a " + item.devolucao.nome_retirante + " em " + formatarData(item.devolucao.data_devolucao)
-      : "Status: disponível",
-  ];
-  card.append(titulo);
-  linhas.forEach((texto) => { const p = document.createElement("p"); p.className = "meta"; p.textContent = texto; card.append(p); });
+  const card = criar("article", "cartao cartao-cae");
+  const cabeca = criar("div", "cabeca");
+  cabeca.append(criar("span", "cartao-titulo", item.descricao));
+  cabeca.append(item.devolucao ? criar("span", "etiqueta devolvido", "Devolvido") : criar("span", "etiqueta", "Disponível"));
+  card.append(cabeca);
+  card.append(criar("span", "meta", "Encontrado em: " + item.local_encontrado + " · " + formatarQuando(item.encontrado_em) +
+    (item.categoria ? " · " + item.categoria : "")));
+  card.append(criar("span", "meta", "Contato de quem achou: " + (item.contato_achador || "não informado")));
+  if (item.devolucao) {
+    card.append(criar("span", "meta", "Retirado por " + item.devolucao.nome_retirante + " em " + formatarData(item.devolucao.data_devolucao)));
+  }
   if (item.status === "disponivel") {
-    const botao = document.createElement("button");
-    botao.textContent = "Registrar devolução";
-    botao.addEventListener("click", () => devolver(item, card, botao));
-    card.append(botao);
+    const acoes = criar("div", "acoes");
+    const botao = criar("button", "", "Registrar devolução");
+    botao.type = "button";
+    botao.addEventListener("click", () => abrirDevolucao(item, card));
+    acoes.append(botao);
+    card.append(acoes);
   }
   return card;
 }
 
-async function devolver(item, card, botao) {
-  const nome = (prompt("Nome de quem está retirando o item:") || "").trim();
-  if (!nome) return;
-  botao.disabled = true;
+function abrirDevolucao(item, card) {
+  devolucaoAtual = { item, card };
+  document.getElementById("dialogo-item").textContent = "Item: " + item.descricao;
+  formDevolucao.reset();
+  erroDialogo.hidden = true;
+  botaoConfirmar.disabled = false;
+  dialogo.showModal();
+  campoNome.focus();
+}
+
+formDevolucao.addEventListener("submit", async (e) => {
+  e.preventDefault(); // só fecha depois que a API confirmar
+  const { item, card } = devolucaoAtual;
+  botaoConfirmar.disabled = true;
+  erroDialogo.hidden = true;
   try {
     const atualizado = await chamarCae("/cae/itens/" + item.id + "/devolucao", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ nome_retirante: nome }),
+      body: JSON.stringify({ nome_retirante: campoNome.value }),
     });
+    dialogo.close();
     card.replaceWith(criarCard(atualizado));
-    mostrar("Devolução registrada: o item foi entregue a " + atualizado.devolucao.nome_retirante + ".", "ok");
+    mostrar("Devolução registrada: “" + atualizado.descricao + "” foi entregue a " + atualizado.devolucao.nome_retirante + ".", "ok");
   } catch (erro) {
-    mostrar(erro.message, "erro");
-    botao.disabled = false;
+    erroDialogo.textContent = erro.message;
+    erroDialogo.hidden = false;
+    botaoConfirmar.disabled = false;
   }
-}
+});
+document.getElementById("cancelar-devolucao").addEventListener("click", () => dialogo.close());
 
 async function carregar(reiniciar) {
   if (reiniciar) { deslocamento = 0; lista.replaceChildren(); }
@@ -85,14 +104,6 @@ async function carregar(reiniciar) {
   }
 }
 
-document.getElementById("form-filtros").addEventListener("submit", (e) => { e.preventDefault(); carregar(true); });
-botaoMais.addEventListener("click", () => carregar(false));
-document.getElementById("sair").addEventListener("click", async (e) => {
-  e.preventDefault();
-  await supabaseCliente.auth.signOut();
-  location.href = "login.html";
-});
-
 // Primeiro descobre o campus da pessoa (D21). Logado sem vínculo com a CAE (403): explica e não mostra o painel.
 async function iniciar() {
   mostrar("Carregando… se o servidor estava parado, pode levar até 1 minuto.", "aviso");
@@ -108,5 +119,13 @@ async function iniciar() {
   document.getElementById("site-publico").href = "../index.html?campus=" + encodeURIComponent(campus.sigla);
   carregar(true);
 }
+
+document.getElementById("form-filtros").addEventListener("submit", (e) => { e.preventDefault(); carregar(true); });
+botaoMais.addEventListener("click", () => carregar(false));
+document.getElementById("sair").addEventListener("click", async (e) => {
+  e.preventDefault();
+  await supabaseCliente.auth.signOut();
+  location.href = "login.html";
+});
 
 tokenAtual().then((token) => { if (!token) location.href = "login.html"; else iniciar(); });
