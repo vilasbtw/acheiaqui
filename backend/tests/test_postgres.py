@@ -13,10 +13,17 @@ pytestmark = pytest.mark.postgres
 
 
 def _novo_item(sessao):
-    item = Item(descricao="Garrafa azul", local_encontrado="Cantina", encontrado_em=agora_local())
+    item = Item(descricao="Garrafa azul", local_encontrado="Cantina", encontrado_em=agora_local(), campus_id=_hto(sessao))
     sessao.add(item)
     sessao.commit()
     return item.id
+
+
+def _hto(sessao):
+    return sessao.execute(text("SELECT id FROM campi WHERE sigla = 'hto'")).scalar_one()
+
+
+HTO = "(SELECT id FROM campi WHERE sigla = 'hto')"
 
 
 def test_rls_ligado_em_todas_as_tabelas_do_public(sessao_teste):
@@ -35,8 +42,8 @@ def test_migracoes_foram_registradas(sessao_teste):
 def test_banco_recusa_status_invalido(sessao_teste):
     with pytest.raises(IntegrityError):
         sessao_teste.execute(text(
-            "INSERT INTO itens (descricao, local_encontrado, encontrado_em, status) "
-            "VALUES ('x', 'y', now(), 'expirado')"
+            "INSERT INTO itens (descricao, local_encontrado, encontrado_em, status, campus_id) "
+            f"VALUES ('x', 'y', now(), 'expirado', {HTO})"
         ))
     sessao_teste.rollback()
 
@@ -53,15 +60,15 @@ def test_banco_recusa_duas_devolucoes_do_mesmo_item(sessao_teste):
 def test_banco_recusa_categoria_inexistente(sessao_teste):
     with pytest.raises(IntegrityError):
         sessao_teste.execute(text(
-            "INSERT INTO itens (descricao, local_encontrado, encontrado_em, categoria_id) "
-            "VALUES ('x', 'y', now(), 999999)"
+            "INSERT INTO itens (descricao, local_encontrado, encontrado_em, categoria_id, campus_id) "
+            f"VALUES ('x', 'y', now(), 999999, {HTO})"
         ))
     sessao_teste.rollback()
 
 
 def test_banco_recusa_campo_obrigatorio_nulo(sessao_teste):
     with pytest.raises(IntegrityError):
-        sessao_teste.execute(text("INSERT INTO itens (local_encontrado, encontrado_em) VALUES ('y', now())"))
+        sessao_teste.execute(text(f"INSERT INTO itens (local_encontrado, encontrado_em, campus_id) VALUES ('y', now(), {HTO})"))
     sessao_teste.rollback()
 
 

@@ -15,6 +15,7 @@ __pycache__/
 *.pyc
 .pytest_cache/
 .coverage
+backend/dast.db
 
 # Editor / sistema
 .vscode/

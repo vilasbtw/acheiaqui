@@ -90,14 +90,27 @@ def test_item_aceita_campus_valido_e_recusa_inexistente(sessao_teste):
     sessao_teste.rollback()
 
 
+def test_item_sem_campus_e_recusado_desde_a_0003(sessao_teste):
+    versoes = sessao_teste.execute(text("SELECT versao FROM schema_migrations")).scalars().all()
+    assert "0003" in versoes
+    with pytest.raises(IntegrityError):
+        sessao_teste.execute(
+            text("INSERT INTO itens (descricao, local_encontrado, encontrado_em) VALUES ('x', 'y', now())")
+        )
+    sessao_teste.rollback()
+
+
 def test_indice_do_feed_por_campus_existe(sessao_teste):
     indices = sessao_teste.execute(text("SELECT indexname FROM pg_indexes WHERE tablename = 'itens'")).scalars().all()
     assert "idx_itens_campus_status_criado" in indices
 
 
-def test_migracoes_preenchem_o_campus_dos_itens_antigos(sessao_teste):
-    """Banco no estado antigo (só a 0001) com itens já cadastrados; depois as demais migrações: todos viram do hto.
+@pytest.mark.parametrize("ultima_antiga", ["0001", "0002"])
+def test_migracoes_preenchem_o_campus_dos_itens_antigos(sessao_teste, ultima_antiga):
+    """Banco parado numa migração antiga, com itens sem campus; depois as demais migrações: todos viram do hto.
 
+    "0001": banco do MVP (a 0002 preenche). "0002": itens gravados sem campus antes do deploy do backend novo
+    (a 0003 preenche antes de travar o NOT NULL).
     Usa um banco temporário criado e apagado no mesmo servidor de teste (o `sessao_teste` acima já garante que
     ele é local). Se o usuário do banco não puder criar bancos, o teste é pulado.
     """
@@ -117,8 +130,8 @@ def test_migracoes_preenchem_o_campus_dos_itens_antigos(sessao_teste):
         conn = psycopg2.connect(url_temporario)
         try:
             arquivos = mig.listar_arquivos(mig.PASTA_PADRAO)
-            antigas = [a for a in arquivos if a[0] <= "0001"]
-            novas = [a for a in arquivos if a[0] > "0001"]
+            antigas = [a for a in arquivos if a[0] <= ultima_antiga]
+            novas = [a for a in arquivos if a[0] > ultima_antiga]
 
             mig.aplicar(conn, antigas)
             with conn, conn.cursor() as cur:
@@ -133,9 +146,13 @@ def test_migracoes_preenchem_o_campus_dos_itens_antigos(sessao_teste):
                 total, com_campus = cur.fetchone()
                 cur.execute("SELECT count(*) FROM itens i JOIN campi c ON c.id = i.campus_id WHERE c.sigla = 'hto'")
                 de_hortolandia = cur.fetchone()[0]
+                cur.execute("SELECT is_nullable FROM information_schema.columns "
+                            "WHERE table_name = 'itens' AND column_name = 'campus_id'")
+                aceita_nulo = cur.fetchone()[0]
         finally:
             conn.close()
         assert (total, com_campus, de_hortolandia) == (2, 2, 2)
+        assert aceita_nulo == "NO"
     finally:
         with admin.cursor() as cur:
             cur.execute(f'DROP DATABASE IF EXISTS "{nome}"')

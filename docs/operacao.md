@@ -44,9 +44,10 @@ que o deploy automático está ligado).
 Depois de cada deploy, confira: `GET /saude` responde `{"status":"ok"}` e `GET /categorias` devolve as 8 categorias.
 Depois abra o site, registre um item de teste e veja se ele aparece na busca.
 
-**Deploy com mudança no banco:** faça a migração ser compatível com o código antigo (coluna nova nula, tabela
-nova), porque o código novo entra no ar assim que o PR é mesclado. Ordem: backup, migração em desenvolvimento,
-testes, merge, migração em produção. Detalhes em `db/README.md`.
+**Deploy com mudança no banco:** o código novo entra no ar assim que chega à `main`. Migração que **acrescenta**
+(tabela nova, coluna nula) vai para produção **antes** do merge; migração que **restringe** (`NOT NULL`, apagar
+coluna) vai **depois** que o código novo estiver no ar. Sempre com backup antes e passando pelo banco de
+desenvolvimento. Detalhes e exemplos em `db/README.md`, seção "Ordem com o deploy".
 
 ## Ping (manter a API e o banco acordados)
 

@@ -34,13 +34,25 @@ python backend/scripts/aplicar_migracoes.py --env backend/.env
 # 3. Teste o sistema contra o banco de desenvolvimento (backend local + roteiro manual)
 python backend/scripts/verificar_supabase.py          # confere RLS, login e sign-up
 
-# 4. Faça o merge do PR (testes verdes) e, SÓ ENTÃO, produção:
+# 4. Com os testes verdes no PR, PRODUÇÃO (backup primeiro). Antes ou depois do merge? Ver "Ordem com o deploy".
 python backend/scripts/exportar_dados.py --env backend/.env.prod       # backup
 python backend/scripts/aplicar_migracoes.py --env backend/.env.prod --listar
 python backend/scripts/aplicar_migracoes.py --env backend/.env.prod
 ```
 
 O script mostra em **qual servidor e banco** vai mexer e pede para você digitar `sim`. Leia essa linha.
+
+## Ordem com o deploy
+
+O Render e a Vercel publicam a `main` sozinhos, então o que importa é a ordem entre a migração em produção e o merge:
+
+| Tipo de migração | Exemplos | Ordem |
+| --- | --- | --- |
+| **Acrescenta** (tabela nova, coluna nova que aceita nulo) | `0002_campi` | Produção **antes** do merge. O código antigo ignora o que é novo; o código novo precisa disso |
+| **Restringe ou remove** (`NOT NULL`, apagar coluna, `CHECK` mais rígido) | `0003_itens_campus_obrigatorio` | Produção **depois** que o código novo estiver no ar. O código antigo ainda gravaria dados que a regra nova recusa |
+
+Na dúvida, separe em duas migrações, uma de cada tipo, como a 0002 e a 0003. Em 23/10 a ordem foi invertida (models
+novos na `main` antes da `0002` em produção) e a API ficou fora do ar até a migração ser aplicada.
 
 ## Dados só de desenvolvimento
 
