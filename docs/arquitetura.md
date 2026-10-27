@@ -105,3 +105,7 @@ A API não guarda nada em disco nem em memória entre requisições, então cres
 `ci.yml` (a cada PR, push na `main` e toda segunda): Lint e testes (Ruff, pytest, cobertura), Testes com PostgreSQL 16,
 SAST (Bandit e Semgrep), SCA (`pip-audit`) e Segredos (Gitleaks). `dast.yml`: OWASP ZAP contra uma cópia
 descartável da API com SQLite, sem tocar no Supabase. Dependabot semanal para `pip` e GitHub Actions.
+
+Na aplicação: a API manda cabeçalhos de segurança em toda resposta (`nosniff`, `X-Frame-Options`, CSP, `no-store`
+e outros, com teste no CI), e o site tem CSP e cabeçalhos próprios em `frontend/vercel.json`. Detalhes em
+`docs/operacao.md`, seção "Cabeçalhos de segurança e CSP".

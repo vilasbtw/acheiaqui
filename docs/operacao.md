@@ -49,6 +49,22 @@ Depois abra o site, registre um item de teste e veja se ele aparece na busca.
 coluna) vai **depois** que o código novo estiver no ar. Sempre com backup antes e passando pelo banco de
 desenvolvimento. Detalhes e exemplos em `db/README.md`, seção "Ordem com o deploy".
 
+## Cabeçalhos de segurança e CSP
+
+- **API:** `backend/app/main.py` acrescenta os cabeçalhos de segurança em toda resposta (inclusive erros e CORS).
+  O `/docs` fica sem a CSP estrita, senão o Swagger não abre. O `tests/test_cabecalhos_seguranca.py` quebra o CI
+  se alguém remover o middleware.
+- **Site:** `frontend/vercel.json` define a CSP, a lista de endereços de onde o navegador aceita carregar e para onde
+  aceita enviar dados. Hoje são: o próprio site, a API do Render, o Supabase, o jsDelivr (supabase-js) e o Google
+  Fonts.
+- **Usou um serviço novo no site** (outra API, outro CDN, as fotos do Supabase Storage na Etapa 5)? Acrescente o
+  endereço na diretiva certa do `vercel.json`: `script-src` para scripts, `connect-src` para `fetch`, `img-src`
+  para imagens, `style-src` e `font-src` para CSS e fontes. Se esquecer, o navegador bloqueia e o console mostra
+  `Refused to ... because it violates the following Content Security Policy directive`.
+- **Trocou o endereço da API ou o projeto do Supabase?** Atualize também o `connect-src`.
+- O `vercel.json` só vale na Vercel: com `python -m http.server` local não há CSP. Depois do deploy, confira no
+  DevTools (aba Console) que não aparece nenhum `Refused to`.
+
 ## Ping (manter a API e o banco acordados)
 
 O Render dorme após 15 minutos sem visita, e o Supabase pausa o projeto após 1 semana sem atividade.
@@ -143,6 +159,7 @@ Serve para voltar de um desastre ou para criar o projeto de desenvolvimento.
 | Itens novos sem categoria | IA desligada ou sem cota. No log do Render aparece `achei_aqui.ia` com o motivo | Conferir as 3 variáveis `IA_*` e a cota do provedor |
 | Painel da CAE devolve 401 | Sessão expirada, ou `SUPABASE_URL`/`SUPABASE_ANON_KEY` diferentes do projeto usado no login | Entrar de novo; conferir as variáveis |
 | Painel da CAE devolve 403 ("não está vinculada à CAE") | Login certo, mas a conta não tem linha em `cae_membros` | Seção "Contas da CAE e campus" |
+| Algo do site parou só na Vercel, e o console mostra `Refused to ...` | A CSP do `frontend/vercel.json` não libera aquele endereço | Seção "Cabeçalhos de segurança e CSP" |
 | Migração recusada | Ver a tabela "Problemas comuns" em `db/README.md` | |
 
 Os logs da API ficam na aba Logs do serviço no Render.
