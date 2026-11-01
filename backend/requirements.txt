@@ -6,4 +6,4 @@ psycopg2-binary==2.9.13
 pydantic==2.14.1
 python-dotenv==1.2.4
 httpx==0.28.1        # usado pela autenticação (valida o token no Supabase) e pelos testes
-tzdata==2026.5       # necessário no Windows para o fuso America/Sao_Paulo
+tzdata==2026.6       # necessário no Windows para o fuso America/Sao_Paulo
