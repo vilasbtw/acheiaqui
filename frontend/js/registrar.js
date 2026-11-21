@@ -4,7 +4,49 @@ const campoData = document.getElementById("encontrado_em");
 const detalhesQuando = document.getElementById("detalhes-quando");
 const botao = document.getElementById("enviar");
 const sucesso = document.getElementById("sucesso");
+const campoFoto = document.getElementById("foto");
+const previaFoto = document.getElementById("previa-foto");
+const previaImagem = document.getElementById("previa-imagem");
 let campus = null;
+let fotoPronta = null; // data URL do JPEG já reduzido, ou null
+let preparandoFoto = false;
+
+function esconderPrevia() {
+  fotoPronta = null;
+  previaImagem.removeAttribute("src");
+  previaFoto.hidden = true;
+}
+
+function limparFoto() {
+  esconderPrevia();
+  campoFoto.value = "";
+}
+
+campoFoto.addEventListener("change", async () => {
+  const arquivo = campoFoto.files[0];
+  esconderPrevia(); // mantém o arquivo escolhido à mostra no campo
+  if (!arquivo) return;
+  preparandoFoto = true;
+  botao.disabled = true;
+  mostrar("Preparando a foto…", "aviso");
+  try {
+    fotoPronta = await prepararFoto(arquivo);
+    previaImagem.src = fotoPronta;
+    previaFoto.hidden = false;
+    mostrar("", "");
+  } catch (erro) {
+    limparFoto();
+    mostrar(erro.message, "erro");
+  } finally {
+    preparandoFoto = false;
+    botao.disabled = false;
+  }
+});
+
+document.getElementById("remover-foto").addEventListener("click", () => {
+  limparFoto();
+  campoFoto.focus();
+});
 
 function agoraLocal() { // "AAAA-MM-DDTHH:MM" no horário do aparelho
   const d = new Date();
@@ -14,6 +56,7 @@ function agoraLocal() { // "AAAA-MM-DDTHH:MM" no horário do aparelho
 
 function prepararFormulario() {
   form.reset();
+  limparFoto();
   campoData.max = agoraLocal();
   campoData.value = agoraLocal();
   detalhesQuando.open = false;
@@ -29,6 +72,7 @@ form.addEventListener("invalid", (e) => {
 
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
+  if (preparandoFoto) return;
   if (!campus) {
     mostrar("Escolha no topo da página o campus em que você encontrou o item.", "erro");
     return;
@@ -43,10 +87,11 @@ form.addEventListener("submit", async (e) => {
       local_encontrado: document.getElementById("local").value,
       encontrado_em: campoData.value,
       contato_achador: contato || null,
+      foto: fotoPronta,
     });
     mostrar("", "");
     document.getElementById("sucesso-resumo").textContent = "“" + item.descricao + "” foi registrado no campus " + item.campus.nome +
-      (item.categoria ? ", na categoria " + item.categoria + "." : ".");
+      (item.categoria ? ", na categoria " + item.categoria : "") + (fotoPronta ? ", com foto." : ".");
     document.getElementById("sucesso-retirada").textContent = textoRetirada(item.campus);
     document.getElementById("ver-item").href = "item.html?id=" + encodeURIComponent(item.id) + "&campus=" + encodeURIComponent(item.campus.sigla);
     form.hidden = true;

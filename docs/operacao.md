@@ -56,8 +56,9 @@ desenvolvimento. Detalhes e exemplos em `db/README.md`, seção "Ordem com o dep
   se alguém remover o middleware.
 - **Site:** `frontend/vercel.json` define a CSP, a lista de endereços de onde o navegador aceita carregar e para onde
   aceita enviar dados. Hoje são: o próprio site, a API do Render, o Supabase, o jsDelivr (supabase-js) e o Google
-  Fonts.
-- **Usou um serviço novo no site** (outra API, outro CDN, as fotos do Supabase Storage na Etapa 5)? Acrescente o
+  Fonts. O `img-src` também libera `data:` (prévia da foto no registro) e `blob:` (foto do item no painel da CAE,
+  baixada da API com o token).
+- **Usou um serviço novo no site** (outra API, outro CDN, outro lugar para as fotos)? Acrescente o
   endereço na diretiva certa do `vercel.json`: `script-src` para scripts, `connect-src` para `fetch`, `img-src`
   para imagens, `style-src` e `font-src` para CSS e fontes. Se esquecer, o navegador bloqueia e o console mostra
   `Refused to ... because it violates the following Content Security Policy directive`.

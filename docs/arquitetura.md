@@ -31,7 +31,7 @@ flowchart LR
 | --- | --- | --- | --- |
 | Frontend | Vercel (sem build) | Telas públicas (`index` com busca e filtro por categoria, `registrar`, `item` com o detalhe e o botão Compartilhar) e da CAE (`cae/login`, `cae/painel`). Verde do IFSP e Open Sans. Seletor de campus no cabeçalho (`js/campus.js`): vem de `?campus=` ou da última escolha guardada no navegador; com um só campus ativo, já vem escolhido. Endereços em `js/config.js`. Só fala com a API; usa o Supabase apenas para o login | `frontend/` |
 | API | Render | Regras, validação, busca, chamada à IA, autorização da CAE. Camadas internas: `routers` → `services` → `models` (+ `schemas` para entrada e saída) | `backend/app/` |
-| Dados | Supabase | Tabelas `campi`, `cae_membros`, `categorias`, `itens`, `devolucoes` (+ `schema_migrations`) e o Auth. RLS ligado, sem policies: a API REST do Supabase não expõe nada | `db/migrations/` |
+| Dados | Supabase | Tabelas `campi`, `cae_membros`, `categorias`, `itens`, `item_fotos`, `devolucoes` (+ `schema_migrations`) e o Auth. RLS ligado, sem policies: a API REST do Supabase não expõe nada | `db/migrations/` |
 
 ## Fluxos principais
 
@@ -39,7 +39,9 @@ flowchart LR
 2. **Registrar achado** (público): `POST /itens` exige o `campus` (sigla) e recusa campus inexistente ou inativo antes
    de chamar a IA. Valida os campos, recusa data no futuro e, se não veio categoria,
    pede uma à IA. Se a IA falhar, demorar mais de 8 s ou responder algo que não é uma categoria, o item é salvo
-   sem categoria (D2).
+   sem categoria (D2). A foto é opcional: o navegador a converte num JPEG de até 500 KB (sem EXIF) e manda no
+   mesmo JSON; a API confere a assinatura do arquivo (JPEG, PNG ou WebP, até 600 KB) antes de chamar a IA e grava
+   em `item_fotos` (D4, D25).
 3. **Buscar** (público): `GET /itens?campus=&q=` é o feed de um campus: só itens `disponivel` daquele campus, sem
    contato (D1, D5, D22). `GET /itens/{id}` informa o campus do item.
 4. **Login da CAE**: o `supabase-js` faz o login e o frontend envia `Authorization: Bearer <token>`. A API pergunta
@@ -48,6 +50,7 @@ flowchart LR
    (`GET /cae/campus` diz qual é). Item de outro campus responde 404, como se não existisse.
 5. **Devolução** (CAE): `POST /cae/itens/{id}/devolucao` grava a devolução e muda o status na mesma transação.
    Duas devoluções simultâneas do mesmo item: a segunda recebe 409 (`UNIQUE` em `devolucoes.item_id`).
+   `GET /cae/itens` informa `tem_foto`; a imagem vem de `GET /cae/itens/{id}/foto`, só para a CAE do campus do item.
 6. **Saúde**: `GET /saude` executa `SELECT 1` no banco. O monitor de ping chama isso (D11).
 
 ## Decisões
@@ -59,7 +62,7 @@ Cada decisão tem um número (`D##`) que aparece nos comentários do código. O 
 | D1 | Busca por palavras-chave com `ILIKE`, sem extensão do banco nem API externa | Em uso (muda na Etapa 4) |
 | D2 | IA só sugere a categoria no registro; nunca bloqueia o registro | Em uso |
 | D3 | Status do item: apenas `disponivel` ou `devolvido` | Em uso (Etapa 3 acrescenta `arquivado`) |
-| D4 | Foto reservada (`foto_url`), fora do MVP | Reservada (Etapa 5) |
+| D4 | Foto opcional no registro, guardada no próprio banco (tabela `item_fotos`, migração 0004), e não no Storage: sem chave secreta nova nem serviço novo. `foto_url` fica sem uso | Em uso |
 | D5 | Contato de quem achou só aparece para a CAE | Em uso |
 | D6 | Login da CAE pelo Supabase Auth; cadastro desativado, contas criadas à mão | Em uso (com `cae_membros` desde a Etapa 1) |
 | D7 | Horário guardado como hora local de Brasília, sem fuso, sem conversão na exibição | Em uso |
@@ -70,7 +73,7 @@ Cada decisão tem um número (`D##`) que aparece nos comentários do código. O 
 | D20–D22 | Tabela `campi`; CAE = logado e presente em `cae_membros` (outro campus = 404); público escolhe o campus por `?campus=` | Em uso |
 | D23 | Spam vira `status = 'arquivado'`, reversível | A decidir na Etapa 3 |
 | D24 | Busca sem acento via coluna de texto normalizado | A decidir na Etapa 4 |
-| D25 | Upload de foto: comprimir no navegador; foto de Documentos só para a CAE | A decidir na Etapa 5 |
+| D25 | Foto comprimida no navegador (JPEG, sem EXIF/GPS); **só a CAE vê qualquer foto**, de qualquer categoria. O público não vê foto nenhuma | Em uso |
 | D26–D27 | Tabela `perdidos` com link secreto; correspondência por regras e IA, a CAE sempre confirma | A decidir na Etapa 6 |
 | D28 | E-mail em segundo plano, só depois da confirmação da CAE e com consentimento | A decidir na Etapa 7 |
 
@@ -98,7 +101,7 @@ A API não guarda nada em disco nem em memória entre requisições, então cres
 3. **Busca**: `ILIKE` percorre a tabela inteira. Com muitos milhares de itens, a Etapa 4 troca por coluna normalizada e índice `pg_trgm`.
 4. **Mais de uma instância**: um limite de requisições guardado em memória não vale (cada instância teria o seu). A decisão 001 precisa levar isso em conta.
 5. **IA**: a chamada é síncrona e pode segurar o registro por até 8 s. Se o volume crescer, mover para segundo plano.
-6. **Banco**: o limite de 500 MB só aperta com fotos (Etapa 5), que vão para o Storage e não para as tabelas.
+6. **Banco**: as fotos ficam no banco (D4), até 600 KB cada (em média bem menos, uns 100 a 300 KB). Com os 500 MB do plano gratuito, cabem alguns milhares de itens com foto. Se apertar, mover `item_fotos` para o Storage do Supabase: só a API lê e grava as fotos, então o frontend não muda. Sem limite de requisições (decisão 001), um script abusivo enche o banco mais rápido com fotos.
 
 ## Qualidade e segurança na esteira
 

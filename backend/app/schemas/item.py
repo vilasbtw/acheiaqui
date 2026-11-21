@@ -5,6 +5,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from app.schemas.campus import CampusPublico
 from app.schemas.devolucao import DevolucaoResposta
+from app.services.foto import MAX_FOTO_TEXTO
 from app.tempo import FUSO_CAMPUS, agora_local
 
 # Folga para relógios de celular levemente adiantados.
@@ -22,6 +23,13 @@ class ItemCriar(BaseModel):
     encontrado_em: datetime
     contato_achador: Optional[str] = Field(default=None, max_length=100)  # opcional (RF02)
     categoria_id: Optional[int] = None  # se vier vazio, a IA tenta sugerir (D2)
+    # Opcional: data URL ("data:image/jpeg;base64,..."), já comprimida no navegador. Só a CAE vê (D25).
+    foto: Optional[str] = Field(default=None, max_length=MAX_FOTO_TEXTO)
+
+    @field_validator("foto")
+    @classmethod
+    def _foto_vazia_vira_nula(cls, valor):
+        return valor or None
 
     @field_validator("contato_achador")
     @classmethod
@@ -62,4 +70,5 @@ class ItemCAE(ItemPublico):
 
     status: str
     contato_achador: Optional[str] = None
+    tem_foto: bool = False  # a imagem vem de GET /cae/itens/{id}/foto
     devolucao: Optional[DevolucaoResposta] = None

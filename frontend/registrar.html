@@ -42,6 +42,14 @@
       <input id="contato" maxlength="100" placeholder="Nome, e-mail ou telefone" autocomplete="off" aria-describedby="dica-contato">
       <p class="dica" id="dica-contato">Só a CAE vê o seu contato. Ele não aparece na busca.</p>
 
+      <label for="foto">Foto do item <span class="opcional">(opcional)</span></label>
+      <input id="foto" type="file" accept="image/*" aria-describedby="dica-foto">
+      <p class="dica" id="dica-foto">Só a CAE vê a foto. Ela ajuda a confirmar quem é o dono do item.</p>
+      <div id="previa-foto" class="previa-foto" hidden>
+        <img id="previa-imagem" alt="Prévia da foto escolhida">
+        <button id="remover-foto" type="button" class="secundario">Remover foto</button>
+      </div>
+
       <details class="mais-detalhes" id="detalhes-quando">
         <summary>Encontrou em outro dia ou horário?</summary>
         <label for="encontrado_em">Quando encontrou?</label>
@@ -77,6 +85,7 @@
   <script src="js/config.js"></script>
   <script src="js/api.js"></script>
   <script src="js/campus.js"></script>
+  <script src="js/foto.js"></script>
   <script src="js/registrar.js"></script>
 </body>
 </html>

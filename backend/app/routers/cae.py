@@ -6,7 +6,7 @@ Cada rota só enxerga o campus da pessoa logada; item de outro campus responde 4
 from datetime import date, datetime, time, timedelta
 from typing import Literal, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, joinedload
 
@@ -15,6 +15,7 @@ from app.database import obter_sessao
 from app.models.cae_membro import CaeMembro
 from app.models.devolucao import Devolucao
 from app.models.item import Item
+from app.models.item_foto import ItemFoto
 from app.schemas.campus import CampusPublico
 from app.schemas.devolucao import DevolucaoCriar
 from app.schemas.item import ItemCAE
@@ -49,7 +50,12 @@ def historico_de_itens(
 
     consulta = (
         sessao.query(Item)
-        .options(joinedload(Item.categoria), joinedload(Item.campus), joinedload(Item.devolucao))
+        .options(
+            joinedload(Item.categoria),
+            joinedload(Item.campus),
+            joinedload(Item.devolucao),
+            joinedload(Item.foto),  # só para saber se tem foto: a imagem é deferred e não vem junto
+        )
         .filter(Item.campus_id == membro.campus_id)
     )
     if status:
@@ -59,6 +65,19 @@ def historico_de_itens(
     if data_fim:
         consulta = consulta.filter(Item.encontrado_em < datetime.combine(data_fim + timedelta(days=1), time.min))
     return consulta.order_by(Item.criado_em.desc(), Item.id.desc()).offset(offset).limit(limit).all()
+
+
+@router.get("/itens/{item_id}/foto", response_class=Response, responses={200: {"content": {"image/jpeg": {}}}})
+def foto_do_item(
+    item_id: int,
+    membro: CaeMembro = Depends(exigir_cae),
+    sessao: Session = Depends(obter_sessao),
+):
+    """Foto do item (D25): só a CAE do campus do item vê. Item de outro campus ou sem foto: 404."""
+    foto = sessao.get(ItemFoto, item_id)
+    if foto is None or foto.item.campus_id != membro.campus_id:
+        raise HTTPException(status_code=404, detail="Foto não encontrada.")
+    return Response(content=foto.conteudo, media_type=foto.tipo)
 
 
 @router.post("/itens/{item_id}/devolucao", response_model=ItemCAE, status_code=201)

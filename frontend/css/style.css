@@ -210,3 +210,11 @@ dialog .acoes { justify-content: flex-end; }
   .detalhes { grid-template-columns: 1fr; gap: .1rem; }
   .detalhes dd { margin-bottom: .5rem; }
 }
+
+/* Foto do item: prévia no registro e foto no painel da CAE (D25) */
+input[type="file"] { padding: .45rem; }
+.previa-foto { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem; margin-top: .6rem; }
+.previa-foto img, .foto-cae img { display: block; max-width: 100%; height: auto; border: 1px solid var(--borda); border-radius: 8px; }
+.previa-foto img { max-height: 10rem; }
+.foto-cae { margin-top: .75rem; }
+.foto-cae img { max-height: 24rem; }

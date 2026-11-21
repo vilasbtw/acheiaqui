@@ -76,3 +76,21 @@ def test_nome_de_categoria_e_unico(sessao_teste):
     with pytest.raises(IntegrityError):
         sessao_teste.execute(text("INSERT INTO categorias (nome) VALUES ('Documentos')"))
     sessao_teste.rollback()
+
+
+def test_banco_recusa_foto_de_tipo_nao_permitido(sessao_teste):
+    item_id = _novo_item(sessao_teste)
+    with pytest.raises(IntegrityError):
+        sessao_teste.execute(text(
+            "INSERT INTO item_fotos (item_id, tipo, conteudo) VALUES (:i, 'text/html', '\x3c'::bytea)"
+        ), {"i": item_id})
+    sessao_teste.rollback()
+
+
+def test_banco_recusa_foto_maior_que_o_limite(sessao_teste):
+    item_id = _novo_item(sessao_teste)
+    with pytest.raises(IntegrityError):
+        sessao_teste.execute(text(
+            "INSERT INTO item_fotos (item_id, tipo, conteudo) VALUES (:i, 'image/jpeg', decode(repeat('00', 600001), 'hex'))"
+        ), {"i": item_id})
+    sessao_teste.rollback()

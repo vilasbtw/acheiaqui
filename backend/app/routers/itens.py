@@ -7,8 +7,10 @@ from app.database import obter_sessao
 from app.models.campus import Campus
 from app.models.categoria import Categoria
 from app.models.item import Item
+from app.models.item_foto import ItemFoto
 from app.schemas.item import ItemCriar, ItemPublico
 from app.services.busca import aplicar_busca
+from app.services.foto import FotoInvalida, decodificar_foto
 from app.services.ia_categoria import sugerir_categoria
 
 router = APIRouter(prefix="/itens", tags=["itens"])
@@ -38,6 +40,12 @@ def registrar_item(dados: ItemCriar, sessao: Session = Depends(obter_sessao)):
     campus = _campus_ativo(sessao, dados.campus)
     if campus is None:  # antes da IA: um registro inválido não gasta a cota
         raise HTTPException(status_code=400, detail="Campus inexistente ou inativo.")
+    foto = None
+    if dados.foto:  # também antes da IA
+        try:
+            foto = decodificar_foto(dados.foto)
+        except FotoInvalida as erro:
+            raise HTTPException(status_code=422, detail=str(erro)) from None
 
     categorias = sessao.query(Categoria).all()
     categoria_id = dados.categoria_id
@@ -54,6 +62,8 @@ def registrar_item(dados: ItemCriar, sessao: Session = Depends(obter_sessao)):
         categoria_id=categoria_id,
         campus_id=campus.id,
     )
+    if foto:
+        item.foto = ItemFoto(tipo=foto.tipo, conteudo=foto.conteudo)
     sessao.add(item)
     sessao.commit()
     sessao.refresh(item)

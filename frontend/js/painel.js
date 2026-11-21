@@ -29,6 +29,56 @@ async function chamarCae(caminho, opcoes = {}) {
   }
 }
 
+// A foto exige o token, e <img src> não manda o header Authorization. Então: fetch com o token,
+// e a imagem vira um endereço blob: local (só existe nesta aba).
+async function baixarFoto(itemId) {
+  const token = await tokenAtual();
+  if (!token) { location.href = "login.html"; throw new Error("Sessão expirada."); }
+  let resposta;
+  try {
+    resposta = await fetch(CONFIG.apiUrl + "/cae/itens/" + encodeURIComponent(itemId) + "/foto", {
+      headers: { Authorization: "Bearer " + token },
+    });
+  } catch (e) {
+    throw new Error("Não foi possível carregar a foto. Tente de novo.");
+  }
+  if (resposta.status === 401) {
+    await supabaseCliente.auth.signOut();
+    location.href = "login.html";
+    throw new Error("Sessão expirada.");
+  }
+  if (!resposta.ok) throw new Error("Não foi possível carregar a foto (" + resposta.status + ").");
+  return URL.createObjectURL(await resposta.blob());
+}
+
+function adicionarBotaoFoto(item, card, acoes) {
+  const botao = criar("button", "secundario", "Ver foto");
+  botao.type = "button";
+  let figura = null;
+  botao.addEventListener("click", async () => {
+    if (figura) { // já carregada: só mostra ou esconde
+      figura.hidden = !figura.hidden;
+      botao.textContent = figura.hidden ? "Ver foto" : "Esconder foto";
+      return;
+    }
+    botao.disabled = true;
+    try {
+      const imagem = criar("img");
+      imagem.alt = "Foto de: " + item.descricao;
+      imagem.src = await baixarFoto(item.id);
+      figura = criar("div", "foto-cae");
+      figura.append(imagem);
+      card.insertBefore(figura, acoes);
+      botao.textContent = "Esconder foto";
+    } catch (erro) {
+      mostrar(erro.message, "erro");
+    } finally {
+      botao.disabled = false;
+    }
+  });
+  acoes.append(botao);
+}
+
 function criarCard(item) {
   const card = criar("article", "cartao cartao-cae");
   const cabeca = criar("div", "cabeca");
@@ -41,14 +91,15 @@ function criarCard(item) {
   if (item.devolucao) {
     card.append(criar("span", "meta", "Retirado por " + item.devolucao.nome_retirante + " em " + formatarData(item.devolucao.data_devolucao)));
   }
+  const acoes = criar("div", "acoes");
   if (item.status === "disponivel") {
-    const acoes = criar("div", "acoes");
     const botao = criar("button", "", "Registrar devolução");
     botao.type = "button";
     botao.addEventListener("click", () => abrirDevolucao(item, card));
     acoes.append(botao);
-    card.append(acoes);
   }
+  if (item.tem_foto) adicionarBotaoFoto(item, card, acoes);
+  if (acoes.children.length) card.append(acoes);
   return card;
 }
 
