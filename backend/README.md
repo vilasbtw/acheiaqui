@@ -22,7 +22,7 @@ A arquitetura do backend é dividida em camadas para facilitar a escalabilidade 
 
 /app/routers/: Concentra os endpoints da API (cae.py, categorias.py, itens.py), separando as rotas por domínio.
 
-/app/services/: Abriga a lógica de negócios e as regras mais complexas. Destaca-se o arquivo ia_categoria.py, responsável pela integração do Agente de IA para classificação e matching automático de itens.
+/app/services/: Abriga a lógica de negócios e as regras mais complexas. Destaca-se o arquivo ia_categoria.py, responsável pela integração do Agente de IA que sugere a categoria de cada item no momento do registro.
 
 /scripts/: Scripts utilitários para validação de banco de dados e testes locais de IA (verificar_supabase.py, testar_ia.py).
 
@@ -30,7 +30,11 @@ A arquitetura do backend é dividida em camadas para facilitar a escalabilidade 
 
 Funcionalidade de IA
 
-O backend abriga a lógica do Agente de IA responsável por analisar as descrições dos itens registrados e sugerir potenciais matches (correspondências) para a Comissão de Assistência Estudantil (CAE), otimizando a devolução de itens perdidos.
+O backend abriga o Agente de IA que sugere a categoria de um item a partir da descrição, no registro (POST /itens), quando quem registra não informa uma categoria. A chamada vai para qualquer provedor compatível com "chat/completions" (configurado em IA_API_KEY, IA_BASE_URL e IA_MODEL no .env), e a resposta só é aceita se for o nome de uma categoria que existe no banco.
+
+A IA nunca bloqueia o registro (decisão D2): se ela não estiver configurada, falhar, passar de 8 s ou responder algo que não é uma categoria, o item é salvo sem categoria.
+
+A correspondência entre itens perdidos e achados por IA ainda não existe: está planejada para a Etapa 6 (D26–D27 em docs/arquitetura.md).
 
 Como Executar
 

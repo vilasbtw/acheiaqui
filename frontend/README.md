@@ -12,7 +12,7 @@ Estrutura de Diretórios
 
 /: Arquivos HTML públicos principais, como a página inicial (index.html) e a página de registro de itens (registrar.html).
 
-/cae/: Área restrita para a Comissão de Assistência Estudantil, contendo o login (login.html) e o painel de administração (painel.html) onde os alertas do agente de IA são exibidos.
+/cae/: Área restrita para a Comissão de Assistência Estudantil, contendo o login (login.html) e o painel de administração (painel.html), onde a CAE acompanha os itens e registra as devoluções.
 
 /css/: Arquivos de folha de estilo (style.css).
 
@@ -24,7 +24,9 @@ auth.js e login.js: Lógica de autenticação de usuários da CAE.
 
 buscar.js e registrar.js: Funcionalidades da área pública do portal.
 
-painel.js: Lógica do painel administrativo, incluindo o consumo das sugestões de match da IA.
+painel.js: Lógica do painel administrativo da CAE.
+
+Sobre a IA: o frontend não chama a IA nem guarda nenhuma chave. A categoria sugerida pela IA é escolhida no backend durante o registro e chega ao frontend como um campo comum do item.
 
 Como Executar
 
