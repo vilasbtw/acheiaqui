@@ -127,3 +127,15 @@ def test_banco_so_guarda_email_de_aviso_com_consentimento(sessao_teste):
     with pytest.raises(IntegrityError):  # consentimento sem e-mail
         sessao_teste.execute(text(base), {"h": "d" * 64, "consentiu": True, "email": None})
     sessao_teste.rollback()
+
+
+def test_banco_exige_achado_no_perdido_entregue(sessao_teste):
+    base = (
+        "INSERT INTO perdidos (campus_id, descricao, perdido_em, contato, token_hash, status, item_id) "
+        f"VALUES ({HTO}, 'x', CURRENT_DATE, 'c', :h, 'entregue', :i)"
+    )
+    with pytest.raises(IntegrityError):
+        sessao_teste.execute(text(base), {"h": "e" * 64, "i": None})
+    sessao_teste.rollback()
+    sessao_teste.execute(text(base), {"h": "f" * 64, "i": _novo_item(sessao_teste)})
+    sessao_teste.commit()

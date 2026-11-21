@@ -55,8 +55,9 @@ def registrar_item(dados: ItemCriar, sessao: Session = Depends(obter_sessao)):
     exigir_limite_diario(sessao, com_foto=foto is not None)  # decisão 001: antes da IA
 
     categoria_id = dados.categoria_id
+    categoria_ia_id = None
     if categoria_id is None:
-        categoria_id = _categoria_sugerida(dados.descricao, categorias)
+        categoria_id = categoria_ia_id = _categoria_sugerida(dados.descricao, categorias)
 
     item = Item(
         descricao=dados.descricao,
@@ -64,6 +65,7 @@ def registrar_item(dados: ItemCriar, sessao: Session = Depends(obter_sessao)):
         encontrado_em=dados.encontrado_em,
         contato_achador=dados.contato_achador,
         categoria_id=categoria_id,
+        categoria_ia_id=categoria_ia_id,  # para medir a IA com dados reais (0010)
         campus_id=campus.id,
     )
     if foto:

@@ -58,6 +58,8 @@ flowchart LR
 7. **Correspondência** (CAE): `GET /cae/perdidos/{id}/sugestoes`. Regras escolhem os achados disponíveis do campus
    (data compatível, palavras e categoria em comum) e a IA dá nota ALTA, MEDIA ou BAIXA aos 5 melhores (gravada em
    `correspondencias`, para não gastar cota de novo). A CAE confirma (`/confirmar`), encerra ou reabre.
+   Quando a CAE registra a devolução do achado confirmado, o pedido vira `entregue` (migração 0009) e o link
+   mostra "Item entregue". Entregue não reabre.
 8. **Aviso por e-mail** (Etapa 7): ao confirmar, se quem perdeu marcou o consentimento, o e-mail sai em segundo
    plano pelo Brevo. O painel mostra enviado, falhou (com o motivo) ou pendente, e a CAE pode reenviar.
 6. **Saúde**: `GET /saude` executa `SELECT 1` no banco. O monitor de ping chama isso (D11).
@@ -69,7 +71,7 @@ Cada decisão tem um número (`D##`) que aparece nos comentários do código. O 
 | ID | Decisão | Situação |
 | --- | --- | --- |
 | D1 | Busca por palavras-chave, sem extensão do banco nem API externa | Em uso (sem acento desde a Etapa 4, D24) |
-| D2 | IA só sugere a categoria no registro; nunca bloqueia o registro | Em uso |
+| D2 | IA só sugere a categoria no registro; nunca bloqueia o registro. A sugestão fica em `categoria_ia_id` e a CAE pode corrigir a categoria no painel (migração 0010), o que dá a acurácia real | Em uso |
 | D3 | Status do item: `disponivel`, `devolvido` ou `arquivado` (D23) | Em uso |
 | D4 | Foto opcional no registro, guardada no próprio banco (tabela `item_fotos`, migração 0004), e não no Storage: sem chave secreta nova nem serviço novo. `foto_url` fica sem uso | Em uso |
 | D5 | Contato de quem achou só aparece para a CAE | Em uso |

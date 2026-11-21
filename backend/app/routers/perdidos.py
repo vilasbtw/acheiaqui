@@ -51,7 +51,7 @@ def _acompanhamento(perdido: Perdido) -> PerdidoAcompanhamento:
         status=perdido.status,
         campus=perdido.campus,
         criado_em=perdido.criado_em,
-        item_encontrado=perdido.item.descricao if perdido.status == "encontrado" and perdido.item else None,
+        item_encontrado=perdido.item.descricao if perdido.status in ("encontrado", "entregue") and perdido.item else None,
     )
 
 

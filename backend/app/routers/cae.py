@@ -13,13 +13,14 @@ from sqlalchemy.orm import Session, joinedload, sessionmaker
 from app.auth import exigir_cae
 from app.database import obter_sessao
 from app.models.cae_membro import CaeMembro
+from app.models.categoria import Categoria
 from app.models.devolucao import Devolucao
 from app.models.item import Item
 from app.models.item_foto import ItemFoto
 from app.models.perdido import Perdido
 from app.schemas.campus import CampusPublico
 from app.schemas.devolucao import DevolucaoCriar
-from app.schemas.item import ItemCAE
+from app.schemas.item import CorrigirCategoria, ItemCAE
 from app.schemas.perdido import ConfirmarCorrespondencia, PerdidoCAE, SugestaoCAE
 from app.services.aviso import enviar_aviso
 from app.services.correspondencia import sugerir
@@ -56,6 +57,7 @@ def historico_de_itens(
         sessao.query(Item)
         .options(
             joinedload(Item.categoria),
+            joinedload(Item.categoria_ia),
             joinedload(Item.campus),
             joinedload(Item.devolucao),
             joinedload(Item.foto),  # só para saber se tem foto: a imagem é deferred e não vem junto
@@ -76,6 +78,26 @@ def _item_do_campus(sessao: Session, item_id: int, membro: CaeMembro) -> Item:
     item = sessao.get(Item, item_id)
     if item is None or item.campus_id != membro.campus_id:
         raise HTTPException(status_code=404, detail="Item não encontrado.")
+    return item
+
+
+@router.post("/itens/{item_id}/categoria", response_model=ItemCAE)
+def corrigir_categoria(
+    item_id: int,
+    dados: CorrigirCategoria,
+    membro: CaeMembro = Depends(exigir_cae),
+    sessao: Session = Depends(obter_sessao),
+):
+    """A CAE corrige a categoria (por exemplo, quando a IA errou). A sugestão original da IA fica guardada
+    em categoria_ia_id, para medir a acurácia com dados reais."""
+    item = _item_do_campus(sessao, item_id, membro)
+    if dados.categoria_id is not None and sessao.get(Categoria, dados.categoria_id) is None:
+        raise HTTPException(status_code=400, detail="Categoria inexistente.")
+    if dados.categoria_id != item.categoria_id:
+        item.categoria_id = dados.categoria_id
+        item.categoria_corrigida_em = agora_local()
+        sessao.commit()
+    sessao.refresh(item)
     return item
 
 
@@ -139,6 +161,10 @@ def registrar_devolucao(
         raise HTTPException(status_code=409, detail="Este item já foi devolvido.")
 
     item.status = "devolvido"
+    # Etapa 6: quem perdeu e teve este achado confirmado passa a ver "entregue" pelo link (0009).
+    sessao.query(Perdido).filter(Perdido.item_id == item.id, Perdido.status == "encontrado").update(
+        {Perdido.status: "entregue"}, synchronize_session=False
+    )
     sessao.add(
         Devolucao(
             item_id=item.id,
@@ -166,7 +192,7 @@ def _perdido_do_campus(sessao: Session, perdido_id: int, membro: CaeMembro) -> P
 
 @router.get("/perdidos", response_model=list[PerdidoCAE])
 def listar_perdidos(
-    status: Optional[Literal["procurando", "encontrado", "encerrado"]] = None,
+    status: Optional[Literal["procurando", "encontrado", "entregue", "encerrado"]] = None,
     limit: int = Query(default=20, ge=1, le=50),
     offset: int = Query(default=0, ge=0),
     membro: CaeMembro = Depends(exigir_cae),
@@ -271,6 +297,8 @@ def reabrir_perdido(
     perdido = _perdido_do_campus(sessao, perdido_id, membro)
     if perdido.status == "procurando":
         raise HTTPException(status_code=409, detail="Este pedido já está em busca.")
+    if perdido.status == "entregue":
+        raise HTTPException(status_code=409, detail="O item já foi entregue a quem perdeu: não dá para reabrir.")
     perdido.status = "procurando"
     perdido.item_id = None
     perdido.confirmado_em = None

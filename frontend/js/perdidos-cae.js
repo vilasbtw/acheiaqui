@@ -9,6 +9,7 @@ const botaoMais = document.getElementById("mais");
 const ETIQUETAS = {
   procurando: ["etiqueta", "Procurando"],
   encontrado: ["etiqueta encontrado", "Encontrado"],
+  entregue: ["etiqueta devolvido", "Entregue"],
   encerrado: ["etiqueta devolvido", "Encerrado"],
 };
 const NOTAS = {
@@ -24,8 +25,9 @@ function formatarDia(iso) { return iso.slice(0, 10).split("-").reverse().join("/
 function textoDoAviso(perdido) {
   if (!perdido.aviso_consentido) return "Aviso por e-mail: não pediu";
   const base = "Aviso por e-mail (" + perdido.email_aviso + "): ";
-  if (perdido.status !== "encontrado") return base + "será enviado quando a CAE confirmar";
   if (perdido.aviso_enviado_em) return base + "enviado em " + formatarQuando(perdido.aviso_enviado_em);
+  if (perdido.status === "procurando") return base + "será enviado quando a CAE confirmar";
+  if (perdido.status !== "encontrado") return base + "não enviado";
   if (perdido.aviso_erro) return base + "falhou (" + perdido.aviso_erro + ")";
   return base + "enviando… atualize a lista para ver o resultado";
 }
@@ -124,8 +126,10 @@ function criarCard(perdido) {
       acoes.append(botaoAcao(perdido.aviso_enviado_em ? "Reenviar aviso" : "Enviar aviso de novo", "secundario", () =>
         trocarStatus(perdido, card, "reenviar-aviso", null, "Aviso por e-mail reenviado. Atualize a lista em alguns segundos para ver o resultado.")));
     }
-    acoes.append(botaoAcao("Reabrir", "secundario", () =>
-      trocarStatus(perdido, card, "reabrir", null, "Pedido reaberto: voltou para \"Procurando\".")));
+    if (perdido.status !== "entregue") { // entregue: o item já foi retirado, não tem volta
+      acoes.append(botaoAcao("Reabrir", "secundario", () =>
+        trocarStatus(perdido, card, "reabrir", null, "Pedido reaberto: voltou para \"Procurando\".")));
+    }
   }
   card.append(acoes);
   card.append(area);

@@ -231,3 +231,6 @@ input[type="file"] { padding: .45rem; }
 .nota-ia.baixa { color: var(--texto-suave); }
 .caixa-marcar { display: flex; align-items: center; gap: .5rem; font-weight: 600; margin-top: 1rem; cursor: pointer; }
 .caixa-marcar input { width: auto; margin: 0; }
+.corrigir-categoria { margin-top: .75rem; padding: .6rem .75rem; border: 1px solid var(--borda); border-radius: 8px; background: var(--fundo); }
+.corrigir-categoria label { margin-top: 0; }
+.corrigir-categoria .acoes { margin-top: .6rem; }

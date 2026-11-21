@@ -19,7 +19,7 @@ class Perdido(Base):
     categoria_id = Column(Integer, ForeignKey("categorias.id"))  # sugerida pela IA (D2)
     texto_busca = Column(Text)  # minúsculas e sem acento (D24); preenchido abaixo
     token_hash = Column(String(64), nullable=False, unique=True)  # SHA-256 do segredo do link
-    status = Column(String(20), nullable=False, default="procurando")  # procurando, encontrado ou encerrado
+    status = Column(String(20), nullable=False, default="procurando")  # procurando, encontrado, entregue ou encerrado
     item_id = Column(Integer, ForeignKey("itens.id"))  # o achado que a CAE confirmou
     confirmado_em = Column(DateTime)
     # Etapa 7 (D28): aviso por e-mail. O e-mail só é gravado com consentimento (CHECK na migração 0008).

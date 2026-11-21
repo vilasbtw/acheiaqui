@@ -9,6 +9,7 @@ const STATUS = {
   procurando: { etiqueta: "Procurando", classe: "etiqueta",
     texto: "A CAE está comparando o seu pedido com os itens encontrados no campus. Volte a este link de vez em quando." },
   encontrado: { etiqueta: "Pode estar na CAE", classe: "etiqueta encontrado", texto: "" },
+  entregue: { etiqueta: "Entregue", classe: "etiqueta encontrado", texto: "" },
   encerrado: { etiqueta: "Encerrado", classe: "etiqueta devolvido",
     texto: "Este pedido foi encerrado e não está mais em busca." },
 };
@@ -25,9 +26,11 @@ function exibir(pedido) {
   document.getElementById("perdido-em").textContent = formatarDia(pedido.perdido_em);
   document.getElementById("campus-nome").textContent = pedido.campus.nome;
   document.getElementById("criado-em").textContent = pedido.criado_em ? formatarDia(pedido.criado_em) : "—";
-  document.getElementById("explicacao").textContent = pedido.status === "encontrado"
-    ? "A CAE encontrou um item que parece ser o seu: “" + pedido.item_encontrado + "”. Vá até a CAE com um documento para conferir e retirar."
-    : status.texto;
+  const explicacoes = {
+    encontrado: "A CAE encontrou um item que parece ser o seu: “" + pedido.item_encontrado + "”. Vá até a CAE com um documento para conferir e retirar.",
+    entregue: "Item entregue: “" + pedido.item_encontrado + "”. Que bom que você o encontrou!",
+  };
+  document.getElementById("explicacao").textContent = explicacoes[pedido.status] || status.texto;
   mostrarCampus(pedido.status === "encontrado" ? pedido.campus : null);
   document.getElementById("rodape-campus").textContent = "Campus " + pedido.campus.nome;
   document.getElementById("ver-busca").href = "index.html?campus=" + encodeURIComponent(pedido.campus.sigla);

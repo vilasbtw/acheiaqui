@@ -10,6 +10,8 @@ class Item(Base):
     id = Column(Integer, primary_key=True)
     descricao = Column(Text, nullable=False)
     categoria_id = Column(Integer, ForeignKey("categorias.id"))
+    categoria_ia_id = Column(Integer, ForeignKey("categorias.id"))  # o que a IA sugeriu no registro (0010)
+    categoria_corrigida_em = Column(DateTime)  # quando a CAE trocou a categoria (0010)
     campus_id = Column(Integer, ForeignKey("campi.id"), nullable=False)  # D20; NOT NULL desde a migração 0003
     local_encontrado = Column(String(100), nullable=False)
     encontrado_em = Column(DateTime, nullable=False)  # hora local, sem fuso (D7)
@@ -19,7 +21,8 @@ class Item(Base):
     texto_busca = Column(Text)  # descrição + local, minúsculas e sem acento (D24); preenchido abaixo
     criado_em = Column(DateTime, server_default=func.now())
 
-    categoria = relationship("Categoria")
+    categoria = relationship("Categoria", foreign_keys=[categoria_id])
+    categoria_ia = relationship("Categoria", foreign_keys=[categoria_ia_id])
     campus = relationship("Campus")
     devolucao = relationship("Devolucao", back_populates="item", uselist=False)
     foto = relationship("ItemFoto", back_populates="item", uselist=False, cascade="all, delete-orphan")

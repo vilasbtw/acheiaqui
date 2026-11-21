@@ -54,6 +54,25 @@ na IA.
 atacante. No pior caso, o item ficou sem categoria. Isso confirma a defesa principal: a resposta só é aceita se
 for uma categoria da lista.
 
+## Acurácia com dados reais (correções da CAE)
+
+Desde a migração 0010, o registro guarda o que a IA sugeriu (`itens.categoria_ia_id`). Quando a CAE corrige a
+categoria no painel ("Corrigir categoria"), a sugestão original continua guardada. A consulta abaixo, rodada no
+SQL Editor do Supabase de produção, mostra quantas sugestões a CAE manteve:
+
+```sql
+SELECT
+  count(*)                                                    AS sugeridas_pela_ia,
+  count(*) FILTER (WHERE categoria_id = categoria_ia_id)      AS mantidas,
+  round(100.0 * count(*) FILTER (WHERE categoria_id = categoria_ia_id) / nullif(count(*), 0), 1) AS acuracia_pct
+FROM itens
+WHERE categoria_ia_id IS NOT NULL;
+```
+
+É uma estimativa otimista: uma sugestão errada que a CAE não percebeu conta como acerto. Fica mais confiável
+quanto mais a CAE revisar as categorias. Itens registrados antes da 0010 ficam de fora, porque não se sabe se a
+categoria deles veio da IA.
+
 ## Próximos passos
 
 - Comparar o `gpt-oss-120b` e o `qwen3.8-27b` (disponíveis no Groq em 21/11/2026).

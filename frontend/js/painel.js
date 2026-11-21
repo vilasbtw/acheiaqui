@@ -85,6 +85,65 @@ function botaoDeStatus(item, card, texto, acao, pergunta) {
   return botao;
 }
 
+// Categoria: a CAE corrige quando a IA errou. A sugestão original da IA fica guardada (mede a acurácia real).
+let categoriasPromessa = null;
+function categorias() {
+  if (!categoriasPromessa) categoriasPromessa = listarCategorias().catch((erro) => { categoriasPromessa = null; throw erro; });
+  return categoriasPromessa;
+}
+
+function textoDaCategoria(item) {
+  const atual = "Categoria: " + (item.categoria || "sem categoria");
+  if (!item.categoria_ia) return atual + (item.categoria_corrigida_em ? " (corrigida pela CAE)" : "");
+  if (item.categoria_corrigida_em) return atual + " (a IA tinha sugerido " + item.categoria_ia + "; corrigida pela CAE)";
+  return atual + " (sugerida pela IA)";
+}
+
+function adicionarCorrecaoDeCategoria(item, card, acoes) {
+  const botao = criar("button", "secundario", "Corrigir categoria");
+  botao.type = "button";
+  botao.addEventListener("click", async () => {
+    botao.disabled = true;
+    let lista;
+    try { lista = await categorias(); } catch (erro) { mostrar(erro.message, "erro"); botao.disabled = false; return; }
+    const caixa = criar("div", "corrigir-categoria");
+    const rotulo = criar("label", "", "Nova categoria");
+    const seletor = criar("select");
+    seletor.id = "categoria-" + item.id;
+    rotulo.htmlFor = seletor.id;
+    seletor.append(new Option("Sem categoria", ""));
+    lista.forEach((c) => seletor.append(new Option(c.nome, c.id)));
+    const atual = lista.find((c) => c.nome === item.categoria);
+    seletor.value = atual ? String(atual.id) : "";
+    const salvar = criar("button", "", "Salvar");
+    salvar.type = "button";
+    const cancelar = criar("button", "secundario", "Cancelar");
+    cancelar.type = "button";
+    cancelar.addEventListener("click", () => { caixa.remove(); botao.disabled = false; });
+    salvar.addEventListener("click", async () => {
+      salvar.disabled = true;
+      try {
+        const atualizado = await chamarCae("/cae/itens/" + item.id + "/categoria", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ categoria_id: seletor.value ? Number(seletor.value) : null }),
+        });
+        card.replaceWith(criarCard(atualizado));
+        mostrar("Categoria de “" + atualizado.descricao + "” salva: " + (atualizado.categoria || "sem categoria") + ".", "ok");
+      } catch (erro) {
+        mostrar(erro.message, "erro");
+        salvar.disabled = false;
+      }
+    });
+    const botoes = criar("div", "acoes");
+    botoes.append(salvar, cancelar);
+    caixa.append(rotulo, seletor, botoes);
+    card.insertBefore(caixa, acoes);
+    seletor.focus();
+  });
+  acoes.append(botao);
+}
+
 function criarCard(item) {
   const card = criar("article", "cartao cartao-cae");
   const cabeca = criar("div", "cabeca");
@@ -96,8 +155,8 @@ function criarCard(item) {
   };
   cabeca.append(etiquetas[item.status] || etiquetas.disponivel);
   card.append(cabeca);
-  card.append(criar("span", "meta", "Encontrado em: " + item.local_encontrado + " · " + formatarQuando(item.encontrado_em) +
-    (item.categoria ? " · " + item.categoria : "")));
+  card.append(criar("span", "meta", "Encontrado em: " + item.local_encontrado + " · " + formatarQuando(item.encontrado_em)));
+  card.append(criar("span", "meta", textoDaCategoria(item)));
   card.append(criar("span", "meta", "Contato de quem achou: " + (item.contato_achador || "não informado")));
   if (item.devolucao) {
     card.append(criar("span", "meta", "Retirado por " + item.devolucao.nome_retirante + " em " + formatarData(item.devolucao.data_devolucao)));
@@ -116,7 +175,8 @@ function criarCard(item) {
     acoes.append(botaoDeStatus(item, card, "Desarquivar", "desarquivar", null));
   }
   if (item.tem_foto) adicionarBotaoFoto(item, card, acoes);
-  if (acoes.children.length) card.append(acoes);
+  adicionarCorrecaoDeCategoria(item, card, acoes);
+  card.append(acoes);
   return card;
 }
 

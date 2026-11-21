@@ -71,4 +71,15 @@ class ItemCAE(ItemPublico):
     status: str
     contato_achador: Optional[str] = None
     tem_foto: bool = False  # a imagem vem de GET /cae/itens/{id}/foto
+    categoria_ia: Optional[str] = None  # o que a IA sugeriu no registro, se sugeriu (0010)
+    categoria_corrigida_em: Optional[datetime] = None
     devolucao: Optional[DevolucaoResposta] = None
+
+    @field_validator("categoria_ia", mode="before")
+    @classmethod
+    def _nome_da_categoria_ia(cls, valor):
+        return getattr(valor, "nome", valor)
+
+
+class CorrigirCategoria(BaseModel):
+    categoria_id: Optional[int] = Field(default=None, ge=1, description="Nova categoria; vazio = sem categoria")
