@@ -137,3 +137,19 @@ def test_log_quando_a_resposta_nao_e_uma_categoria(ia_configurada, monkeypatch, 
     with caplog.at_level("WARNING", logger="achei_aqui.ia"):
         assert sugerir_categoria("violão", CATEGORIAS) is None
     assert "Instrumentos musicais" in caplog.text
+
+
+# ---------- categoria genérica (avaliação de 21/11/2026) ----------
+
+def test_com_outros_na_lista_o_prompt_manda_usar_outros(ia_configurada, monkeypatch):
+    chamadas = _simular(monkeypatch, texto="Outros")
+    assert sugerir_categoria("bicicleta azul", CATEGORIAS) == "Outros"
+    sistema = chamadas[0]["json"]["messages"][0]["content"]
+    assert "responda Outros" in sistema
+    assert "NENHUMA" not in sistema
+
+
+def test_sem_outros_na_lista_o_prompt_permite_nenhuma(ia_configurada, monkeypatch):
+    chamadas = _simular(monkeypatch, texto="NENHUMA")
+    assert sugerir_categoria("bicicleta azul", ["Documentos", "Chaves"]) is None
+    assert "responda NENHUMA" in chamadas[0]["json"]["messages"][0]["content"]
