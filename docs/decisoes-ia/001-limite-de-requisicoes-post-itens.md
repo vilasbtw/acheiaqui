@@ -117,6 +117,12 @@ compartilhada entre instâncias. Revisar se o Render passar a ter mais de uma in
 ## Validação
 - Testes novos: `tests/test_limites.py` (16 testes: janela deslizante, por IP, cabeçalho, limites diários,
   nenhuma chamada à IA quando estoura). Suíte local: 181 passaram.
-- Resultado da esteira (link): ________
-- Conferir em produção que o `True-Client-IP` chega: ________
+- Resultado da esteira: CI e DAST verdes no commit `ce37c73` (push direto na `main`, sem PR).
+- Conferido em produção em 21/11/2026:
+  1. 22 tentativas inválidas (campus inexistente, nada gravado), cada uma com um `True-Client-IP` falso diferente:
+     as 20 primeiras deram 400 e a 21ª e a 22ª deram 429. Forjar o cabeçalho não fura o limite.
+  2. Com esse IP bloqueado, um registro pelo celular no 4G (outra rede) passou. Cada visitante tem a sua conta:
+     a API recebe o IP real, e não o do proxy do Render.
+  3. No Wi-Fi da mesma casa, o celular ficou bloqueado junto com o computador (mesmo IP público). É o mesmo efeito
+     do Wi-Fi do campus, e por isso o limite por IP é generoso.
 - Tempo gasto, do alerta até a esteira verde: ________ (compare com a estimativa sem IA: ________)
