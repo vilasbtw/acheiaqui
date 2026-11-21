@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Date, DateTime, ForeignKey, Integer, String, Text, event
+from sqlalchemy import Boolean, Column, Date, DateTime, ForeignKey, Integer, String, Text, event
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
@@ -22,6 +22,11 @@ class Perdido(Base):
     status = Column(String(20), nullable=False, default="procurando")  # procurando, encontrado ou encerrado
     item_id = Column(Integer, ForeignKey("itens.id"))  # o achado que a CAE confirmou
     confirmado_em = Column(DateTime)
+    # Etapa 7 (D28): aviso por e-mail. O e-mail só é gravado com consentimento (CHECK na migração 0008).
+    email_aviso = Column(String(254))
+    aviso_consentido = Column(Boolean, nullable=False, default=False)
+    aviso_enviado_em = Column(DateTime)
+    aviso_erro = Column(String(200))
     criado_em = Column(DateTime, server_default=func.now())
 
     campus = relationship("Campus")

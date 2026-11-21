@@ -229,3 +229,5 @@ input[type="file"] { padding: .45rem; }
 .nota-ia { font-weight: 600; }
 .nota-ia.alta { color: var(--verde-escuro); }
 .nota-ia.baixa { color: var(--texto-suave); }
+.caixa-marcar { display: flex; align-items: center; gap: .5rem; font-weight: 600; margin-top: 1rem; cursor: pointer; }
+.caixa-marcar input { width: auto; margin: 0; }

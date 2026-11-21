@@ -20,6 +20,16 @@ const NOTAS = {
 function mostrar(texto, tipo) { mensagem.textContent = texto; mensagem.className = texto ? "msg " + tipo : ""; }
 function formatarDia(iso) { return iso.slice(0, 10).split("-").reverse().join("/"); }
 
+// Etapa 7 (D28): o e-mail sai em segundo plano depois da confirmação; aqui a CAE vê o resultado.
+function textoDoAviso(perdido) {
+  if (!perdido.aviso_consentido) return "Aviso por e-mail: não pediu";
+  const base = "Aviso por e-mail (" + perdido.email_aviso + "): ";
+  if (perdido.status !== "encontrado") return base + "será enviado quando a CAE confirmar";
+  if (perdido.aviso_enviado_em) return base + "enviado em " + formatarQuando(perdido.aviso_enviado_em);
+  if (perdido.aviso_erro) return base + "falhou (" + perdido.aviso_erro + ")";
+  return base + "enviando… atualize a lista para ver o resultado";
+}
+
 function botaoAcao(texto, classe, aoClicar) {
   const botao = criar("button", classe, texto);
   botao.type = "button";
@@ -90,6 +100,7 @@ function criarCard(perdido) {
     card.append(criar("span", "meta", "Achado confirmado: " + perdido.item.descricao +
       (perdido.confirmado_em ? " (em " + formatarDia(perdido.confirmado_em) + ")" : "")));
   }
+  card.append(criar("span", "meta", textoDoAviso(perdido)));
 
   const acoes = criar("div", "acoes");
   const area = criar("div", "sugestoes");
@@ -109,6 +120,10 @@ function criarCard(perdido) {
       await trocarStatus(perdido, card, "encerrar", null, "Pedido encerrado.");
     }));
   } else {
+    if (perdido.status === "encontrado" && perdido.aviso_consentido) {
+      acoes.append(botaoAcao(perdido.aviso_enviado_em ? "Reenviar aviso" : "Enviar aviso de novo", "secundario", () =>
+        trocarStatus(perdido, card, "reenviar-aviso", null, "Aviso por e-mail reenviado. Atualize a lista em alguns segundos para ver o resultado.")));
+    }
     acoes.append(botaoAcao("Reabrir", "secundario", () =>
       trocarStatus(perdido, card, "reabrir", null, "Pedido reaberto: voltou para \"Procurando\".")));
   }

@@ -19,6 +19,9 @@ Backend, cadastradas no painel do Render (local: `backend/.env`, modelo em `back
 | `IA_API_KEY` | Chave do provedor de IA | Não |
 | `IA_BASE_URL` | Endereço do provedor (compatível com `chat/completions`) | Não |
 | `IA_MODEL` | Nome do modelo | Não |
+| `EMAIL_API_KEY` | Chave de API do Brevo (aviso por e-mail, Etapa 7) | Não |
+| `EMAIL_REMETENTE` | E-mail verificado no Brevo como remetente (Senders) | Não |
+| `EMAIL_REMETENTE_NOME` | Nome no "De:" do e-mail. Padrão: Achei Aqui | Não |
 | `IP_CABECALHO_CLIENTE` | Cabeçalho com o IP real do visitante, para o limite por IP do `POST /itens` (decisão 001). No Render: `True-Client-IP`. Local: deixe vazia | Sim, no Render |
 
 As três `IA_*` vão juntas. Se faltar qualquer uma, o sistema funciona normalmente, só sem categoria automática.

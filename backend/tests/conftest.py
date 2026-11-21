@@ -155,3 +155,10 @@ def id_categoria(sessao_teste):
         return sessao_teste.query(Categoria).filter_by(nome=nome).one().id
 
     return _buscar
+
+
+@pytest.fixture(autouse=True)
+def _sem_email_de_verdade(monkeypatch):
+    """Mesmo motivo da IA: o backend/.env local pode ter a chave do Brevo. Nenhum teste manda e-mail de verdade."""
+    for nome in ("EMAIL_API_KEY", "EMAIL_REMETENTE", "EMAIL_REMETENTE_NOME"):
+        monkeypatch.delenv(nome, raising=False)

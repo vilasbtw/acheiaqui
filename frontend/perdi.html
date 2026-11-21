@@ -48,6 +48,16 @@
       <input id="contato" minlength="3" maxlength="100" required placeholder="Ex.: Ana, ana@email.com ou (19) 99999-9999" autocomplete="off" aria-describedby="dica-contato">
       <p class="dica" id="dica-contato">Só a CAE vê o seu contato, para avisar se o item aparecer.</p>
 
+      <label class="caixa-marcar">
+        <input id="aviso_consentido" type="checkbox">
+        Quero receber um e-mail quando a CAE encontrar o meu item
+      </label>
+      <div id="bloco-email" hidden>
+        <label for="email_aviso">Seu e-mail para o aviso</label>
+        <input id="email_aviso" type="email" maxlength="254" autocomplete="email" placeholder="voce@email.com" aria-describedby="dica-email">
+        <p class="dica" id="dica-email">Usado só para esse aviso, e só depois que a CAE confirmar. Só a CAE vê.</p>
+      </div>
+
       <button id="enviar" type="submit">Registrar item perdido</button>
     </form>
     <div id="mensagem" aria-live="polite"></div>

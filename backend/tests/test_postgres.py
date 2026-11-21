@@ -114,3 +114,16 @@ def test_banco_exige_achado_quando_o_perdido_e_encontrado(sessao_teste):
     with pytest.raises(IntegrityError):  # procurando com achado
         sessao_teste.execute(text(base), {"h": "b" * 64, "s": "procurando", "i": item_id})
     sessao_teste.rollback()
+
+
+def test_banco_so_guarda_email_de_aviso_com_consentimento(sessao_teste):
+    base = (
+        "INSERT INTO perdidos (campus_id, descricao, perdido_em, contato, token_hash, aviso_consentido, email_aviso) "
+        f"VALUES ({HTO}, 'x', CURRENT_DATE, 'c', :h, :consentiu, :email)"
+    )
+    with pytest.raises(IntegrityError):  # e-mail sem consentimento
+        sessao_teste.execute(text(base), {"h": "c" * 64, "consentiu": False, "email": "a@b.com"})
+    sessao_teste.rollback()
+    with pytest.raises(IntegrityError):  # consentimento sem e-mail
+        sessao_teste.execute(text(base), {"h": "d" * 64, "consentiu": True, "email": None})
+    sessao_teste.rollback()

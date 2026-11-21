@@ -58,6 +58,8 @@ flowchart LR
 7. **Correspondência** (CAE): `GET /cae/perdidos/{id}/sugestoes`. Regras escolhem os achados disponíveis do campus
    (data compatível, palavras e categoria em comum) e a IA dá nota ALTA, MEDIA ou BAIXA aos 5 melhores (gravada em
    `correspondencias`, para não gastar cota de novo). A CAE confirma (`/confirmar`), encerra ou reabre.
+8. **Aviso por e-mail** (Etapa 7): ao confirmar, se quem perdeu marcou o consentimento, o e-mail sai em segundo
+   plano pelo Brevo. O painel mostra enviado, falhou (com o motivo) ou pendente, e a CAE pode reenviar.
 6. **Saúde**: `GET /saude` executa `SELECT 1` no banco. O monitor de ping chama isso (D11).
 
 ## Decisões
@@ -82,7 +84,7 @@ Cada decisão tem um número (`D##`) que aparece nos comentários do código. O 
 | D24 | Busca sem acento: coluna `itens.texto_busca` (descrição + local, minúsculas, sem acento; migração 0006), preenchida pela API em todo item novo. Nome da categoria comparado sem acento em Python. Sem extensão do banco | Em uso |
 | D25 | Foto comprimida no navegador (JPEG, sem EXIF/GPS); **só a CAE vê qualquer foto**, de qualquer categoria. O público não vê foto nenhuma | Em uso |
 | D26–D27 | Tabela `perdidos` com link secreto (só o hash no banco; contato obrigatório, só a CAE vê). Quem perdeu vê só o status. Correspondência: regras filtram, a IA dá nota aos 5 melhores, a CAE sempre confirma (migração 0007) | Em uso |
-| D28 | E-mail em segundo plano, só depois da confirmação da CAE e com consentimento | A decidir na Etapa 7 |
+| D28 | E-mail em segundo plano (BackgroundTasks), só depois da confirmação da CAE e só com consentimento (o e-mail nem é gravado sem ele; CHECK na migração 0008). Brevo por API HTTP, com remetente verificado (sem domínio próprio). Texto puro. Resultado no painel, com "Reenviar aviso" | Em uso |
 
 D8, D9, D10 e D12 a D16 não aparecem no repositório. Copiar do Memory Bank para esta tabela quando ele for para `docs/`.
 
@@ -97,6 +99,7 @@ nas páginas deles. Os planos mudam: reconferir antes de cada etapa.
 | Supabase (banco e login) | 2 projetos ativos; 500 MB de banco; 1 GB de arquivos; 5 GB de tráfego; 50 mil usuários ativos; **pausa após 1 semana sem atividade**; **sem backup automático** | Precisa de ping e de backup manual (`exportar_dados.py`). Dois projetos: um de produção e um de desenvolvimento, sem sobrar vaga |
 | Vercel (frontend) | Plano Hobby: só uso pessoal e não comercial; limite mensal de banda | Adequado a projeto acadêmico |
 | Provedor de IA | Cota por minuto e por dia, conforme o provedor e o modelo | Estourou a cota: o item é salvo sem categoria. Registrar provedor e limite no Memory Bank |
+| Brevo (e-mail) | Cota diária de envios no plano gratuito (confira o valor atual no painel do Brevo); remetente sem domínio próprio pode cair no spam | Um e-mail por confirmação, então o uso é baixo. Se falhar, o painel mostra o motivo e a CAE reenvia |
 | GitHub Actions | Minutos gratuitos por mês (sem limite em repositório público) | CI e DAST rodam a cada PR, a cada push na `main` e toda segunda |
 
 ## Como escala

@@ -19,6 +19,15 @@ function hojeLocal() { // "AAAA-MM-DD" no horário do aparelho
 campoData.max = hojeLocal();
 campoData.value = hojeLocal();
 
+// Etapa 7 (D28): o e-mail só aparece (e só é enviado) se a pessoa marcar a caixa.
+const caixaAviso = document.getElementById("aviso_consentido");
+const campoEmail = document.getElementById("email_aviso");
+caixaAviso.addEventListener("change", () => {
+  document.getElementById("bloco-email").hidden = !caixaAviso.checked;
+  campoEmail.required = caixaAviso.checked;
+  if (caixaAviso.checked) campoEmail.focus();
+});
+
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
   if (!campus) {
@@ -34,12 +43,15 @@ form.addEventListener("submit", async (e) => {
       perdido_em: campoData.value,
       local_perdido: document.getElementById("local").value.trim() || null,
       contato: document.getElementById("contato").value,
+      aviso_consentido: caixaAviso.checked,
+      email_aviso: caixaAviso.checked ? campoEmail.value.trim() : null,
     });
     const link = new URL("perdido.html", location.href);
     link.hash = "t=" + criado.token;
     campoLink.value = link.href;
     document.getElementById("abrir-link").href = link.href;
-    document.getElementById("sucesso-retirada").textContent = textoRetirada(campus);
+    document.getElementById("sucesso-retirada").textContent = textoRetirada(campus) +
+      (caixaAviso.checked ? " Você também vai receber um e-mail." : "");
     mostrar("", "");
     form.hidden = true;
     sucesso.hidden = false;

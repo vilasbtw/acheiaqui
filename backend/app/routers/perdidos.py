@@ -70,6 +70,8 @@ def registrar_perdido(dados: PerdidoCriar, sessao: Session = Depends(obter_sessa
         local_perdido=dados.local_perdido,
         perdido_em=dados.perdido_em,
         contato=dados.contato,
+        aviso_consentido=dados.aviso_consentido,
+        email_aviso=dados.email_aviso,
         categoria_id=_categoria_sugerida(dados.descricao, sessao.query(Categoria).all()),
         token_hash=hash_do_token(token),
     )

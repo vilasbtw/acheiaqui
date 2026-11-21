@@ -6,9 +6,9 @@ Cada rota só enxerga o campus da pessoa logada; item de outro campus responde 4
 from datetime import date, datetime, time, timedelta
 from typing import Literal, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Response
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Response
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.orm import Session, joinedload, sessionmaker
 
 from app.auth import exigir_cae
 from app.database import obter_sessao
@@ -21,6 +21,7 @@ from app.schemas.campus import CampusPublico
 from app.schemas.devolucao import DevolucaoCriar
 from app.schemas.item import ItemCAE
 from app.schemas.perdido import ConfirmarCorrespondencia, PerdidoCAE, SugestaoCAE
+from app.services.aviso import enviar_aviso
 from app.services.correspondencia import sugerir
 from app.tempo import agora_local
 
@@ -199,10 +200,12 @@ def sugestoes_do_perdido(
 def confirmar_correspondencia(
     perdido_id: int,
     dados: ConfirmarCorrespondencia,
+    tarefas: BackgroundTasks,
     membro: CaeMembro = Depends(exigir_cae),
     sessao: Session = Depends(obter_sessao),
 ):
-    """A CAE confirma que o achado é o item perdido. Quem perdeu passa a ver "encontrado" pelo link."""
+    """A CAE confirma que o achado é o item perdido. Quem perdeu passa a ver "encontrado" pelo link
+    e, se pediu, recebe um e-mail em segundo plano (Etapa 7, D28)."""
     perdido = _perdido_do_campus(sessao, perdido_id, membro)
     if perdido.status != "procurando":
         raise HTTPException(status_code=409, detail="Este pedido não está mais em busca.")
@@ -212,8 +215,33 @@ def confirmar_correspondencia(
     perdido.status = "encontrado"
     perdido.item_id = item.id
     perdido.confirmado_em = agora_local()
+    perdido.aviso_enviado_em = None
+    perdido.aviso_erro = None
     sessao.commit()
     sessao.refresh(perdido)
+    _agendar_aviso(tarefas, sessao, perdido)
+    return perdido
+
+
+def _agendar_aviso(tarefas: BackgroundTasks, sessao: Session, perdido: Perdido) -> None:
+    if perdido.aviso_consentido:
+        tarefas.add_task(enviar_aviso, sessionmaker(bind=sessao.get_bind()), perdido.id)
+
+
+@router.post("/perdidos/{perdido_id}/reenviar-aviso", response_model=PerdidoCAE)
+def reenviar_aviso(
+    perdido_id: int,
+    tarefas: BackgroundTasks,
+    membro: CaeMembro = Depends(exigir_cae),
+    sessao: Session = Depends(obter_sessao),
+):
+    """O envio falhou (ou o servidor reiniciou antes)? A CAE tenta de novo."""
+    perdido = _perdido_do_campus(sessao, perdido_id, membro)
+    if perdido.status != "encontrado":
+        raise HTTPException(status_code=409, detail="Só dá para avisar depois de confirmar a correspondência.")
+    if not perdido.aviso_consentido:
+        raise HTTPException(status_code=409, detail="Quem perdeu não pediu aviso por e-mail.")
+    _agendar_aviso(tarefas, sessao, perdido)
     return perdido
 
 
