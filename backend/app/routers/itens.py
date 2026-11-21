@@ -97,7 +97,7 @@ def buscar_itens(
     if categoria_id is not None:
         consulta = consulta.filter(Item.categoria_id == categoria_id)
     if q and q.strip():
-        consulta = aplicar_busca(consulta, q)
+        consulta = aplicar_busca(consulta, q, sessao.query(Categoria).all())
     else:
         consulta = consulta.order_by(Item.criado_em.desc(), Item.id.desc())
     return consulta.offset(offset).limit(limit).all()

@@ -71,6 +71,15 @@ def _obter_motor_postgres():
     return _motor_postgres
 
 
+@pytest.fixture(autouse=True)
+def _sem_ia_de_verdade(monkeypatch):
+    """O app carrega o backend/.env, que no computador de quem desenvolve tem a chave da IA. Sem isto, todo teste
+    de registro chamaria o provedor de verdade: gasta cota e o resultado depende da resposta da IA.
+    Os testes que precisam da IA a simulam (ver test_ia_servico.py e test_ia_categoria.py)."""
+    for nome in ("IA_API_KEY", "IA_BASE_URL", "IA_MODEL"):
+        monkeypatch.delenv(nome, raising=False)
+
+
 @pytest.fixture()
 def sessao_teste():
     if USA_POSTGRES:

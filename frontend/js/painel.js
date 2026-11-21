@@ -79,11 +79,37 @@ function adicionarBotaoFoto(item, card, acoes) {
   acoes.append(botao);
 }
 
+// Arquivar (spam) e desarquivar (D23). `pergunta`: confirmação antes de agir, ou null para agir direto.
+function botaoDeStatus(item, card, texto, acao, pergunta) {
+  const botao = criar("button", "secundario", texto);
+  botao.type = "button";
+  botao.addEventListener("click", async () => {
+    if (pergunta && !confirm(pergunta)) return;
+    botao.disabled = true;
+    try {
+      const atualizado = await chamarCae("/cae/itens/" + item.id + "/" + acao, { method: "POST" });
+      card.replaceWith(criarCard(atualizado));
+      mostrar(acao === "arquivar"
+        ? "“" + atualizado.descricao + "” foi arquivado e saiu da busca pública."
+        : "“" + atualizado.descricao + "” voltou para a busca pública.", "ok");
+    } catch (erro) {
+      mostrar(erro.message, "erro");
+      botao.disabled = false;
+    }
+  });
+  return botao;
+}
+
 function criarCard(item) {
   const card = criar("article", "cartao cartao-cae");
   const cabeca = criar("div", "cabeca");
   cabeca.append(criar("span", "cartao-titulo", item.descricao));
-  cabeca.append(item.devolucao ? criar("span", "etiqueta devolvido", "Devolvido") : criar("span", "etiqueta", "Disponível"));
+  const etiquetas = {
+    disponivel: criar("span", "etiqueta", "Disponível"),
+    devolvido: criar("span", "etiqueta devolvido", "Devolvido"),
+    arquivado: criar("span", "etiqueta arquivado", "Arquivado"),
+  };
+  cabeca.append(etiquetas[item.status] || etiquetas.disponivel);
   card.append(cabeca);
   card.append(criar("span", "meta", "Encontrado em: " + item.local_encontrado + " · " + formatarQuando(item.encontrado_em) +
     (item.categoria ? " · " + item.categoria : "")));
@@ -97,6 +123,12 @@ function criarCard(item) {
     botao.type = "button";
     botao.addEventListener("click", () => abrirDevolucao(item, card));
     acoes.append(botao);
+    acoes.append(botaoDeStatus(item, card, "Arquivar (spam)", "arquivar",
+      "Arquivar “" + item.descricao + "”? Ele some da busca pública. Dá para desfazer depois."));
+  }
+  if (item.status === "arquivado") {
+    card.append(criar("span", "meta", "Arquivado: não aparece na busca pública."));
+    acoes.append(botaoDeStatus(item, card, "Desarquivar", "desarquivar", null));
   }
   if (item.tem_foto) adicionarBotaoFoto(item, card, acoes);
   if (acoes.children.length) card.append(acoes);

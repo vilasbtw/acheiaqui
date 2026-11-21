@@ -94,3 +94,9 @@ def test_banco_recusa_foto_maior_que_o_limite(sessao_teste):
             "INSERT INTO item_fotos (item_id, tipo, conteudo) VALUES (:i, 'image/jpeg', decode(repeat('00', 600001), 'hex'))"
         ), {"i": item_id})
     sessao_teste.rollback()
+
+
+def test_banco_aceita_status_arquivado(sessao_teste):
+    item_id = _novo_item(sessao_teste)
+    sessao_teste.execute(text("UPDATE itens SET status = 'arquivado' WHERE id = :i"), {"i": item_id})
+    sessao_teste.commit()

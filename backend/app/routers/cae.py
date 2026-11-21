@@ -36,7 +36,7 @@ def campus_da_cae(membro: CaeMembro = Depends(exigir_cae)):
 
 @router.get("/itens", response_model=list[ItemCAE])
 def historico_de_itens(
-    status: Optional[Literal["disponivel", "devolvido"]] = None,
+    status: Optional[Literal["disponivel", "devolvido", "arquivado"]] = None,
     data_inicio: Optional[date] = Query(default=None, description="Início do período (data em que foi encontrado)"),
     data_fim: Optional[date] = Query(default=None, description="Fim do período, inclusive"),
     limit: int = Query(default=20, ge=1, le=50),
@@ -67,6 +67,46 @@ def historico_de_itens(
     return consulta.order_by(Item.criado_em.desc(), Item.id.desc()).offset(offset).limit(limit).all()
 
 
+def _item_do_campus(sessao: Session, item_id: int, membro: CaeMembro) -> Item:
+    """Item de outro campus responde 404, como se não existisse (D21)."""
+    item = sessao.get(Item, item_id)
+    if item is None or item.campus_id != membro.campus_id:
+        raise HTTPException(status_code=404, detail="Item não encontrado.")
+    return item
+
+
+@router.post("/itens/{item_id}/arquivar", response_model=ItemCAE)
+def arquivar_item(
+    item_id: int,
+    membro: CaeMembro = Depends(exigir_cae),
+    sessao: Session = Depends(obter_sessao),
+):
+    """D23: registro falso (spam) some da busca pública sem ser apagado. Pode ser desfeito."""
+    item = _item_do_campus(sessao, item_id, membro)
+    if item.status != "disponivel":
+        raise HTTPException(status_code=409, detail="Só itens disponíveis podem ser arquivados.")
+    item.status = "arquivado"
+    sessao.commit()
+    sessao.refresh(item)
+    return item
+
+
+@router.post("/itens/{item_id}/desarquivar", response_model=ItemCAE)
+def desarquivar_item(
+    item_id: int,
+    membro: CaeMembro = Depends(exigir_cae),
+    sessao: Session = Depends(obter_sessao),
+):
+    """D23: arquivou por engano? O item volta a aparecer na busca."""
+    item = _item_do_campus(sessao, item_id, membro)
+    if item.status != "arquivado":
+        raise HTTPException(status_code=409, detail="Este item não está arquivado.")
+    item.status = "disponivel"
+    sessao.commit()
+    sessao.refresh(item)
+    return item
+
+
 @router.get("/itens/{item_id}/foto", response_class=Response, responses={200: {"content": {"image/jpeg": {}}}})
 def foto_do_item(
     item_id: int,
@@ -88,9 +128,9 @@ def registrar_devolucao(
     sessao: Session = Depends(obter_sessao),
 ):
     """RF05/RF06/RF07: registra quem retirou e marca o item como devolvido, na mesma transação."""
-    item = sessao.get(Item, item_id)
-    if item is None or item.campus_id != membro.campus_id:
-        raise HTTPException(status_code=404, detail="Item não encontrado.")
+    item = _item_do_campus(sessao, item_id, membro)
+    if item.status == "arquivado":
+        raise HTTPException(status_code=409, detail="Este item está arquivado. Desarquive antes de registrar a devolução.")
     if item.status != "disponivel":
         raise HTTPException(status_code=409, detail="Este item já foi devolvido.")
 
