@@ -51,6 +51,7 @@ def afrouxar_limites() -> None:
     limites.limite_por_ip.maximo = 1_000_000
     limites.ITENS_POR_DIA = 1_000_000
     limites.FOTOS_POR_DIA = 1_000_000
+    limites.PERDIDOS_POR_DIA = 1_000_000
 
 
 if __name__ == "__main__":
