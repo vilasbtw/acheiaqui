@@ -77,10 +77,10 @@ Cada decisão tem um número (`D##`) que aparece nos comentários do código. O 
 | D5 | Contato de quem achou só aparece para a CAE | Em uso |
 | D6 | Login da CAE pelo Supabase Auth; cadastro desativado, contas criadas à mão | Em uso (com `cae_membros` desde a Etapa 1) |
 | D7 | Horário guardado como hora local de Brasília, sem fuso, sem conversão na exibição | Em uso |
-| D11 | Monitor externo chama `/saude` para manter API e banco acordados | Em uso (ping pendente na 0.4) |
+| D11 | Monitor externo chama `/saude` para manter API e banco acordados | **Pendente**: monitor ainda não configurado. Em 21/11/2026 os dois projetos do Supabase estavam pausados por falta de uso |
 | D17 | Toda tabela nasce com RLS ligado; o script de migração desfaz a que esquecer | Em uso |
 | D18 | Migrações em SQL numerado com runner próprio, sem Alembic | Em uso |
-| D19 | Projeto Supabase só para desenvolvimento, separado da produção | Recomendada (projeto pendente na 0.5) |
+| D19 | Projeto Supabase só para desenvolvimento, separado da produção | Em uso: `backend/.env` aponta para o de desenvolvimento e `backend/.env.prod` para o de produção. Toda migração passa pelo de desenvolvimento antes (`db/README.md`) |
 | D20–D22 | Tabela `campi`; CAE = logado e presente em `cae_membros` (outro campus = 404); público escolhe o campus por `?campus=` | Em uso |
 | D23 | Spam vira `status = 'arquivado'` (migração 0005): some da busca pública, continua no histórico da CAE e pode ser desarquivado. Item arquivado não pode ser devolvido | Em uso |
 | D24 | Busca sem acento: coluna `itens.texto_busca` (descrição + local, minúsculas, sem acento; migração 0006), preenchida pela API em todo item novo. Nome da categoria comparado sem acento em Python. Sem extensão do banco | Em uso |
