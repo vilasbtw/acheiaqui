@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Acompanhar item perdido — Achei Aqui</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <a class="pular" href="#conteudo">Pular para o conteúdo</a>
+  <header class="topo">
+    <div class="topo-conteudo">
+      <a class="marca" href="index.html" data-manter-campus>Achei Aqui</a>
+      <nav class="menu" aria-label="Principal">
+        <a href="index.html" data-manter-campus>Buscar</a>
+        <a href="registrar.html" data-manter-campus>Achei um item</a>
+        <a href="perdi.html" data-manter-campus>Perdi um item</a>
+        <a href="cae/login.html">Área da CAE</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="conteudo">
+    <h1>Seu item perdido</h1>
+    <div id="mensagem" aria-live="polite"></div>
+
+    <section id="pedido" class="cartao" hidden aria-live="polite">
+      <div class="cabeca-status">
+        <span class="cartao-titulo" id="descricao"></span>
+        <span class="etiqueta" id="etiqueta"></span>
+      </div>
+      <dl class="detalhes">
+        <dt>Perdido em</dt><dd id="perdido-em"></dd>
+        <dt>Campus</dt><dd id="campus-nome"></dd>
+        <dt>Registrado em</dt><dd id="criado-em"></dd>
+      </dl>
+      <p id="explicacao"></p>
+      <p class="info" id="info-cae" hidden></p>
+      <div class="acoes">
+        <a class="botao secundario" href="index.html" data-manter-campus id="ver-busca">Procurar na busca</a>
+        <button id="encerrar" type="button" class="secundario" hidden>Já encontrei / encerrar pedido</button>
+      </div>
+    </section>
+  </main>
+
+  <footer class="rodape">
+    <div class="rodape-conteudo">
+      <p>Projeto acadêmico desenvolvido por alunos do IFSP.</p>
+      <p id="rodape-campus"></p>
+    </div>
+  </footer>
+
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/campus.js"></script>
+  <script src="js/perdido.js"></script>
+</body>
+</html>

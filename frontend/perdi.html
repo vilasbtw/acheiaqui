@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Perdi um item — Achei Aqui</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <a class="pular" href="#conteudo">Pular para o conteúdo</a>
+  <header class="topo">
+    <div class="topo-conteudo">
+      <a class="marca" href="index.html" data-manter-campus>Achei Aqui</a>
+      <nav class="menu" aria-label="Principal">
+        <a href="index.html" data-manter-campus>Buscar</a>
+        <a href="registrar.html" data-manter-campus>Achei um item</a>
+        <a href="perdi.html" data-manter-campus aria-current="page">Perdi um item</a>
+        <a href="cae/login.html">Área da CAE</a>
+      </nav>
+      <label class="seletor-campus">Campus
+        <select id="campus" disabled><option>Carregando…</option></select>
+      </label>
+    </div>
+  </header>
+
+  <main id="conteudo">
+    <h1>Perdeu um item?</h1>
+    <p class="subtitulo">Antes, <a href="index.html" data-manter-campus>procure na busca</a>: ele pode já ter sido encontrado.
+      Não achou? Registre aqui. A CAE compara com os itens que chegarem e você acompanha por um link.</p>
+    <p class="info" id="info-cae" hidden></p>
+
+    <form id="form-perdido" class="cartao">
+      <label for="descricao">O que você perdeu?</label>
+      <textarea id="descricao" rows="2" minlength="3" maxlength="1000" required placeholder="Ex.: garrafa térmica azul com adesivo de gato"></textarea>
+      <p class="dica">Detalhes ajudam: cor, marca, adesivos, o que tinha dentro.</p>
+
+      <label for="perdido_em">Em que dia perdeu? <span class="opcional">(aproximado)</span></label>
+      <input id="perdido_em" type="date" required>
+
+      <label for="local">Onde acha que perdeu? <span class="opcional">(opcional)</span></label>
+      <input id="local" list="locais" maxlength="100" placeholder="Ex.: Biblioteca">
+      <datalist id="locais"><option value="Biblioteca"><option value="Cantina"><option value="Pátio"><option value="Quadra"><option value="Bloco A"><option value="Bloco B"><option value="Laboratório de informática"><option value="Estacionamento"></datalist>
+
+      <label for="contato">Seu nome e contato</label>
+      <input id="contato" minlength="3" maxlength="100" required placeholder="Ex.: Ana, ana@email.com ou (19) 99999-9999" autocomplete="off" aria-describedby="dica-contato">
+      <p class="dica" id="dica-contato">Só a CAE vê o seu contato, para avisar se o item aparecer.</p>
+
+      <button id="enviar" type="submit">Registrar item perdido</button>
+    </form>
+    <div id="mensagem" aria-live="polite"></div>
+
+    <section id="sucesso" class="cartao sucesso" hidden tabindex="-1" aria-labelledby="titulo-sucesso">
+      <h2 id="titulo-sucesso">Registrado! Guarde este link.</h2>
+      <p>É por ele que você acompanha o pedido. <strong>Ele não aparece de novo</strong> e funciona como uma senha:
+        não compartilhe.</p>
+      <label for="link-secreto">Seu link</label>
+      <input id="link-secreto" readonly>
+      <div class="acoes">
+        <button id="copiar" type="button">Copiar link</button>
+        <a id="abrir-link" class="botao secundario" href="perdido.html">Abrir o acompanhamento</a>
+      </div>
+      <p id="copiado" class="dica" aria-live="polite"></p>
+      <h3>E agora?</h3>
+      <ol class="passos">
+        <li><strong>A CAE compara</strong> o seu pedido com os itens encontrados no campus.</li>
+        <li><strong>Se aparecer</strong>, o link mostra "Seu item pode estar na CAE". <span id="sucesso-retirada"></span></li>
+      </ol>
+    </section>
+  </main>
+
+  <footer class="rodape">
+    <div class="rodape-conteudo">
+      <p>Projeto acadêmico desenvolvido por alunos do IFSP.</p>
+      <p id="rodape-campus"></p>
+    </div>
+  </footer>
+
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/campus.js"></script>
+  <script src="js/perdi.js"></script>
+</body>
+</html>

@@ -31,7 +31,7 @@ flowchart LR
 | --- | --- | --- | --- |
 | Frontend | Vercel (sem build) | Telas públicas (`index` com busca e filtro por categoria, `registrar`, `item` com o detalhe e o botão Compartilhar) e da CAE (`cae/login`, `cae/painel`). Verde do IFSP e Open Sans. Seletor de campus no cabeçalho (`js/campus.js`): vem de `?campus=` ou da última escolha guardada no navegador; com um só campus ativo, já vem escolhido. Endereços em `js/config.js`. Só fala com a API; usa o Supabase apenas para o login | `frontend/` |
 | API | Render | Regras, validação, busca, chamada à IA, autorização da CAE. Camadas internas: `routers` → `services` → `models` (+ `schemas` para entrada e saída) | `backend/app/` |
-| Dados | Supabase | Tabelas `campi`, `cae_membros`, `categorias`, `itens`, `item_fotos`, `devolucoes` (+ `schema_migrations`) e o Auth. RLS ligado, sem policies: a API REST do Supabase não expõe nada | `db/migrations/` |
+| Dados | Supabase | Tabelas `campi`, `cae_membros`, `categorias`, `itens`, `item_fotos`, `devolucoes`, `perdidos`, `correspondencias` (+ `schema_migrations`) e o Auth. RLS ligado, sem policies: a API REST do Supabase não expõe nada | `db/migrations/` |
 
 ## Fluxos principais
 
@@ -52,6 +52,12 @@ flowchart LR
    Duas devoluções simultâneas do mesmo item: a segunda recebe 409 (`UNIQUE` em `devolucoes.item_id`).
    `GET /cae/itens` informa `tem_foto`; a imagem vem de `GET /cae/itens/{id}/foto`, só para a CAE do campus do item.
    Registro falso: `POST /cae/itens/{id}/arquivar` tira o item da busca sem apagar; `/desarquivar` desfaz (D23).
+6. **Item perdido** (público): `POST /perdidos` (contato obrigatório, categoria pela IA, mesmos limites do registro)
+   devolve um segredo uma única vez. O site monta `perdido.html#t=<segredo>`: o que vem depois do `#` não sai do
+   navegador. `POST /perdidos/acompanhar` (segredo no corpo) mostra só o status (D27); o banco guarda o SHA-256.
+7. **Correspondência** (CAE): `GET /cae/perdidos/{id}/sugestoes`. Regras escolhem os achados disponíveis do campus
+   (data compatível, palavras e categoria em comum) e a IA dá nota ALTA, MEDIA ou BAIXA aos 5 melhores (gravada em
+   `correspondencias`, para não gastar cota de novo). A CAE confirma (`/confirmar`), encerra ou reabre.
 6. **Saúde**: `GET /saude` executa `SELECT 1` no banco. O monitor de ping chama isso (D11).
 
 ## Decisões
@@ -75,7 +81,7 @@ Cada decisão tem um número (`D##`) que aparece nos comentários do código. O 
 | D23 | Spam vira `status = 'arquivado'` (migração 0005): some da busca pública, continua no histórico da CAE e pode ser desarquivado. Item arquivado não pode ser devolvido | Em uso |
 | D24 | Busca sem acento: coluna `itens.texto_busca` (descrição + local, minúsculas, sem acento; migração 0006), preenchida pela API em todo item novo. Nome da categoria comparado sem acento em Python. Sem extensão do banco | Em uso |
 | D25 | Foto comprimida no navegador (JPEG, sem EXIF/GPS); **só a CAE vê qualquer foto**, de qualquer categoria. O público não vê foto nenhuma | Em uso |
-| D26–D27 | Tabela `perdidos` com link secreto; correspondência por regras e IA, a CAE sempre confirma | A decidir na Etapa 6 |
+| D26–D27 | Tabela `perdidos` com link secreto (só o hash no banco; contato obrigatório, só a CAE vê). Quem perdeu vê só o status. Correspondência: regras filtram, a IA dá nota aos 5 melhores, a CAE sempre confirma (migração 0007) | Em uso |
 | D28 | E-mail em segundo plano, só depois da confirmação da CAE e com consentimento | A decidir na Etapa 7 |
 
 D8, D9, D10 e D12 a D16 não aparecem no repositório. Copiar do Memory Bank para esta tabela quando ele for para `docs/`.

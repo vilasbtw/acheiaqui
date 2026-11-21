@@ -219,3 +219,13 @@ input[type="file"] { padding: .45rem; }
 .previa-foto img { max-height: 10rem; }
 .foto-cae { margin-top: .75rem; }
 .foto-cae img { max-height: 24rem; }
+
+/* Itens perdidos (Etapa 6) */
+.etiqueta.encontrado { background: var(--verde-claro); color: var(--verde-etiqueta); }
+.cabeca-status { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: start; gap: .25rem .75rem; }
+#link-secreto { font-size: .9rem; }
+.sugestoes { display: grid; gap: .5rem; margin-top: .75rem; }
+.sugestao { border: 1px solid var(--borda); border-radius: 8px; padding: .6rem .75rem; background: var(--fundo); }
+.nota-ia { font-weight: 600; }
+.nota-ia.alta { color: var(--verde-escuro); }
+.nota-ia.baixa { color: var(--texto-suave); }

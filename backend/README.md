@@ -34,7 +34,7 @@ O backend abriga o Agente de IA que sugere a categoria de um item a partir da de
 
 A IA nunca bloqueia o registro (decisão D2): se ela não estiver configurada, falhar, passar de 8 s ou responder algo que não é uma categoria, o item é salvo sem categoria.
 
-A correspondência entre itens perdidos e achados por IA ainda não existe: está planejada para a Etapa 6 (D26–D27 em docs/arquitetura.md).
+Desde a Etapa 6 (D26–D27), a IA também ajuda a CAE a encontrar o dono: para cada item perdido, regras escolhem os achados parecidos e a IA dá uma nota (ALTA, MEDIA ou BAIXA) aos 5 melhores (app/services/correspondencia.py). A CAE sempre confirma: a IA nunca decide sozinha.
 
 Como Executar
 

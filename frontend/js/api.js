@@ -58,3 +58,28 @@ function criar(tag, classe, texto) {
   if (texto !== undefined) elemento.textContent = texto; // textContent: nunca interpreta HTML
   return elemento;
 }
+
+// Itens perdidos (Etapa 6). O segredo do link vai no corpo do POST, nunca na URL da API.
+function registrarPerdido(dados) {
+  return chamarApi("/perdidos", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(dados),
+  });
+}
+
+function acompanharPerdido(token) {
+  return chamarApi("/perdidos/acompanhar", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ token }),
+  });
+}
+
+function encerrarPerdido(token) {
+  return chamarApi("/perdidos/encerrar", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ token }),
+  });
+}

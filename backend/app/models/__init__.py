@@ -5,3 +5,4 @@ from app.models.item import Item  # noqa: F401
 from app.models.item_foto import ItemFoto  # noqa: F401
 from app.models.devolucao import Devolucao  # noqa: F401
 from app.models.cae_membro import CaeMembro  # noqa: F401
+from app.models.perdido import Correspondencia, Perdido  # noqa: F401

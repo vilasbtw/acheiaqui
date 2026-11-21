@@ -53,7 +53,9 @@ def _casar_categoria(resposta: str, categorias: list[str]) -> Optional[str]:
     return citadas[0] if len(citadas) == 1 else None
 
 
-def sugerir_categoria(descricao: str, categorias: list[str]) -> Optional[str]:
+def perguntar_ia(sistema: str, usuario: str) -> Optional[str]:
+    """Uma pergunta ao provedor (chat/completions). Devolve o texto da resposta ou None se algo falhar.
+    Usada pela categorização e pela correspondência entre perdidos e achados (ia_correspondencia.py)."""
     chave = os.getenv("IA_API_KEY", "").strip()
     base = os.getenv("IA_BASE_URL", "").strip().rstrip("/")
     modelo = os.getenv("IA_MODEL", "").strip()
@@ -61,23 +63,10 @@ def sugerir_categoria(descricao: str, categorias: list[str]) -> Optional[str]:
     if faltando:
         logger.warning("IA desativada: faltam no .env (ou estão vazias): %s. Reinicie o servidor depois de editar o .env.", ", ".join(faltando))
         return None
-    if not categorias:
-        return None
-
-    lista = "\n".join(f"- {nome}" for nome in categorias)
-    generica = next((n for n in categorias if _normalizar(n) == _normalizar(CATEGORIA_GENERICA)), None)
-    quando_nenhuma_serve = (
-        f"Se o item não se encaixar em nenhuma categoria específica, responda {generica}."
-        if generica else "Se nenhuma servir, responda NENHUMA."
-    )
-    instrucao = INSTRUCAO.format(quando_nenhuma_serve=quando_nenhuma_serve)
     corpo = {
         "model": modelo,
         "temperature": 0,
-        "messages": [
-            {"role": "system", "content": f"{instrucao}\nCategorias:\n{lista}"},
-            {"role": "user", "content": f"<descricao>{descricao[:MAX_DESCRICAO]}</descricao>"},
-        ],
+        "messages": [{"role": "system", "content": sistema}, {"role": "user", "content": usuario}],
     }
     try:
         resposta = httpx.post(
@@ -89,14 +78,29 @@ def sugerir_categoria(descricao: str, categorias: list[str]) -> Optional[str]:
         if resposta.status_code != 200:
             logger.warning("IA: o provedor respondeu %s: %s", resposta.status_code, resposta.text[:300])
             return None
-        texto = resposta.json()["choices"][0]["message"]["content"]
+        return resposta.json()["choices"][0]["message"]["content"] or ""
     except httpx.HTTPError as erro:
         logger.warning("IA: falha de rede ou tempo esgotado (%s): %s", type(erro).__name__, erro)
         return None
     except (ValueError, KeyError, IndexError, TypeError) as erro:
         logger.warning("IA: resposta fora do formato esperado (%s)", type(erro).__name__)
         return None
-    categoria = _casar_categoria(texto or "", categorias)
+
+
+def sugerir_categoria(descricao: str, categorias: list[str]) -> Optional[str]:
+    if not categorias:
+        return None
+    lista = "\n".join(f"- {nome}" for nome in categorias)
+    generica = next((n for n in categorias if _normalizar(n) == _normalizar(CATEGORIA_GENERICA)), None)
+    quando_nenhuma_serve = (
+        f"Se o item não se encaixar em nenhuma categoria específica, responda {generica}."
+        if generica else "Se nenhuma servir, responda NENHUMA."
+    )
+    instrucao = INSTRUCAO.format(quando_nenhuma_serve=quando_nenhuma_serve)
+    texto = perguntar_ia(f"{instrucao}\nCategorias:\n{lista}", f"<descricao>{descricao[:MAX_DESCRICAO]}</descricao>")
+    if texto is None:
+        return None
+    categoria = _casar_categoria(texto, categorias)
     if categoria is None:
-        logger.warning("IA: a resposta não corresponde a nenhuma categoria. Resposta recebida: %r", (texto or "")[:120])
+        logger.warning("IA: a resposta não corresponde a nenhuma categoria. Resposta recebida: %r", texto[:120])
     return categoria

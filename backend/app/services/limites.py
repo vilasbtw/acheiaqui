@@ -100,3 +100,14 @@ def exigir_limite_diario(sessao: Session, com_foto: bool) -> None:
         raise _recusar("O sistema atingiu o limite de registros do dia. Tente de novo mais tarde ou procure a CAE.", 3600)
     if com_foto and sessao.query(ItemFoto).filter(ItemFoto.criado_em >= desde).count() >= FOTOS_POR_DIA:
         raise _recusar("O limite de fotos do dia foi atingido. Remova a foto e registre o item sem ela.", 3600)
+
+
+PERDIDOS_POR_DIA = 100  # registros de item perdido (Etapa 6), todos os campi juntos
+
+
+def exigir_limite_diario_perdidos(sessao: Session) -> None:
+    """Cada perdido pode chamar a IA (categoria): o limite segura a cota e a tabela."""
+    from app.models.perdido import Perdido  # import aqui: evita ciclo models -> services
+
+    if sessao.query(Perdido).filter(Perdido.criado_em >= _ultimas_24h()).count() >= PERDIDOS_POR_DIA:
+        raise _recusar("O sistema atingiu o limite de registros de itens perdidos do dia. Tente amanhã ou procure a CAE.", 3600)

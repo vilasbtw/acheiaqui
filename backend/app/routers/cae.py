@@ -16,9 +16,12 @@ from app.models.cae_membro import CaeMembro
 from app.models.devolucao import Devolucao
 from app.models.item import Item
 from app.models.item_foto import ItemFoto
+from app.models.perdido import Perdido
 from app.schemas.campus import CampusPublico
 from app.schemas.devolucao import DevolucaoCriar
 from app.schemas.item import ItemCAE
+from app.schemas.perdido import ConfirmarCorrespondencia, PerdidoCAE, SugestaoCAE
+from app.services.correspondencia import sugerir
 from app.tempo import agora_local
 
 router = APIRouter(
@@ -149,3 +152,100 @@ def registrar_devolucao(
         raise HTTPException(status_code=409, detail="Este item já foi devolvido.") from None
     sessao.refresh(item)
     return item
+
+
+# ---------- Itens perdidos (Etapa 6, D26/D27): a CAE vê as sugestões e confirma ----------
+
+def _perdido_do_campus(sessao: Session, perdido_id: int, membro: CaeMembro) -> Perdido:
+    perdido = sessao.get(Perdido, perdido_id)
+    if perdido is None or perdido.campus_id != membro.campus_id:
+        raise HTTPException(status_code=404, detail="Pedido não encontrado.")
+    return perdido
+
+
+@router.get("/perdidos", response_model=list[PerdidoCAE])
+def listar_perdidos(
+    status: Optional[Literal["procurando", "encontrado", "encerrado"]] = None,
+    limit: int = Query(default=20, ge=1, le=50),
+    offset: int = Query(default=0, ge=0),
+    membro: CaeMembro = Depends(exigir_cae),
+    sessao: Session = Depends(obter_sessao),
+):
+    """Itens perdidos do campus da pessoa, com o contato de quem perdeu (só a CAE vê)."""
+    consulta = (
+        sessao.query(Perdido)
+        .options(joinedload(Perdido.categoria), joinedload(Perdido.item).joinedload(Item.campus))
+        .filter(Perdido.campus_id == membro.campus_id)
+    )
+    if status:
+        consulta = consulta.filter(Perdido.status == status)
+    return consulta.order_by(Perdido.criado_em.desc(), Perdido.id.desc()).offset(offset).limit(limit).all()
+
+
+@router.get("/perdidos/{perdido_id}/sugestoes", response_model=list[SugestaoCAE])
+def sugestoes_do_perdido(
+    perdido_id: int,
+    membro: CaeMembro = Depends(exigir_cae),
+    sessao: Session = Depends(obter_sessao),
+):
+    """D27: achados parecidos (regras + IA nos 5 melhores). A CAE decide; nada é confirmado sozinho."""
+    perdido = _perdido_do_campus(sessao, perdido_id, membro)
+    if perdido.status != "procurando":
+        return []
+    return sugerir(sessao, perdido)
+
+
+@router.post("/perdidos/{perdido_id}/confirmar", response_model=PerdidoCAE)
+def confirmar_correspondencia(
+    perdido_id: int,
+    dados: ConfirmarCorrespondencia,
+    membro: CaeMembro = Depends(exigir_cae),
+    sessao: Session = Depends(obter_sessao),
+):
+    """A CAE confirma que o achado é o item perdido. Quem perdeu passa a ver "encontrado" pelo link."""
+    perdido = _perdido_do_campus(sessao, perdido_id, membro)
+    if perdido.status != "procurando":
+        raise HTTPException(status_code=409, detail="Este pedido não está mais em busca.")
+    item = _item_do_campus(sessao, dados.item_id, membro)
+    if item.status != "disponivel":
+        raise HTTPException(status_code=409, detail="Só itens disponíveis podem ser confirmados.")
+    perdido.status = "encontrado"
+    perdido.item_id = item.id
+    perdido.confirmado_em = agora_local()
+    sessao.commit()
+    sessao.refresh(perdido)
+    return perdido
+
+
+@router.post("/perdidos/{perdido_id}/encerrar", response_model=PerdidoCAE)
+def encerrar_perdido(
+    perdido_id: int,
+    membro: CaeMembro = Depends(exigir_cae),
+    sessao: Session = Depends(obter_sessao),
+):
+    """Pedido antigo, duplicado ou falso: sai da lista "procurando"."""
+    perdido = _perdido_do_campus(sessao, perdido_id, membro)
+    if perdido.status != "procurando":
+        raise HTTPException(status_code=409, detail="Este pedido não está mais em busca.")
+    perdido.status = "encerrado"
+    sessao.commit()
+    sessao.refresh(perdido)
+    return perdido
+
+
+@router.post("/perdidos/{perdido_id}/reabrir", response_model=PerdidoCAE)
+def reabrir_perdido(
+    perdido_id: int,
+    membro: CaeMembro = Depends(exigir_cae),
+    sessao: Session = Depends(obter_sessao),
+):
+    """Desfaz uma confirmação ou um encerramento feito por engano."""
+    perdido = _perdido_do_campus(sessao, perdido_id, membro)
+    if perdido.status == "procurando":
+        raise HTTPException(status_code=409, detail="Este pedido já está em busca.")
+    perdido.status = "procurando"
+    perdido.item_id = None
+    perdido.confirmado_em = None
+    sessao.commit()
+    sessao.refresh(perdido)
+    return perdido

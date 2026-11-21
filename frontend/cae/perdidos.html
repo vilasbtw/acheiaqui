@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Itens perdidos — Achei Aqui</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <a class="pular" href="#conteudo">Pular para o conteúdo</a>
+  <header class="topo">
+    <div class="topo-conteudo">
+      <a class="marca" href="painel.html">Achei Aqui · CAE</a>
+      <span class="campus-cae" id="campus-cae"></span>
+      <nav class="menu" aria-label="Principal">
+        <a href="painel.html">Itens achados</a>
+        <a href="perdidos.html" aria-current="page">Itens perdidos</a>
+        <a href="../index.html" id="site-publico">Site público</a>
+        <a href="#" id="sair">Sair</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="conteudo">
+    <h1>Itens perdidos</h1>
+    <p class="subtitulo">Pedidos de quem perdeu algo no campus. Em cada um, "Ver sugestões" mostra os achados parecidos:
+      as regras escolhem os candidatos e a IA dá uma nota. <strong>Confira antes de confirmar</strong>: quem perdeu
+      passa a ver "Seu item pode estar na CAE".</p>
+    <form id="form-filtros" class="cartao filtros-painel" aria-label="Filtros">
+      <div>
+        <label for="status">Status</label>
+        <select id="status">
+          <option value="procurando">Procurando</option>
+          <option value="encontrado">Encontrados</option>
+          <option value="encerrado">Encerrados</option>
+          <option value="">Todos</option>
+        </select>
+      </div>
+      <div><button type="submit">Filtrar</button></div>
+    </form>
+    <div id="mensagem" aria-live="polite"></div>
+    <div id="resultados" class="lista"></div>
+    <div class="acoes"><button id="mais" type="button" class="secundario" hidden>Ver mais pedidos</button></div>
+  </main>
+
+  <footer class="rodape">
+    <div class="rodape-conteudo">
+      <p>Projeto acadêmico desenvolvido por alunos do IFSP.</p>
+    </div>
+  </footer>
+
+  <script src="../js/config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js"
+    integrity="sha384-TcHRA3zBbn+Lexh5n+Oil4guNPOS3rjNDpGRAN46u/s/mB2IZ50ceC6TYDU2yvgK" crossorigin="anonymous"></script>
+  <script src="../js/api.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/cae.js"></script>
+  <script src="../js/perdidos-cae.js"></script>
+</body>
+</html>

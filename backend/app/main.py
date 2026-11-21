@@ -6,7 +6,7 @@ from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from app.database import obter_sessao  # importar antes dos routers: carrega o .env
-from app.routers import cae, campi, categorias, itens
+from app.routers import cae, campi, categorias, itens, perdidos
 
 app = FastAPI(title="Achei Aqui API", version="0.1.0")
 
@@ -53,6 +53,7 @@ async def cabecalhos_de_seguranca(request: Request, call_next):
 app.include_router(campi.router)
 app.include_router(categorias.router)
 app.include_router(itens.router)
+app.include_router(perdidos.router)
 app.include_router(cae.router)
 
 

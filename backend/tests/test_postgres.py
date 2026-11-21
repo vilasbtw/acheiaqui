@@ -100,3 +100,17 @@ def test_banco_aceita_status_arquivado(sessao_teste):
     item_id = _novo_item(sessao_teste)
     sessao_teste.execute(text("UPDATE itens SET status = 'arquivado' WHERE id = :i"), {"i": item_id})
     sessao_teste.commit()
+
+
+def test_banco_exige_achado_quando_o_perdido_e_encontrado(sessao_teste):
+    base = (
+        "INSERT INTO perdidos (campus_id, descricao, perdido_em, contato, token_hash, status, item_id) "
+        f"VALUES ({HTO}, 'x', CURRENT_DATE, 'c', :h, :s, :i)"
+    )
+    with pytest.raises(IntegrityError):  # encontrado sem achado
+        sessao_teste.execute(text(base), {"h": "a" * 64, "s": "encontrado", "i": None})
+    sessao_teste.rollback()
+    item_id = _novo_item(sessao_teste)
+    with pytest.raises(IntegrityError):  # procurando com achado
+        sessao_teste.execute(text(base), {"h": "b" * 64, "s": "procurando", "i": item_id})
+    sessao_teste.rollback()
