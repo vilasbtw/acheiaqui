@@ -43,6 +43,17 @@ def preparar_banco() -> None:
         sessao.commit()
 
 
+def afrouxar_limites() -> None:
+    """O ZAP manda milhares de requisições do mesmo IP. Com os limites da decisão 001 ligados, quase todas
+    voltariam 429 e o POST /itens deixaria de ser testado de verdade. Só nesta cópia descartável."""
+    from app.services import limites
+
+    limites.limite_por_ip.maximo = 1_000_000
+    limites.ITENS_POR_DIA = 1_000_000
+    limites.FOTOS_POR_DIA = 1_000_000
+
+
 if __name__ == "__main__":
     preparar_banco()
+    afrouxar_limites()
     uvicorn.run(app, host="127.0.0.1", port=8000, log_level="warning")

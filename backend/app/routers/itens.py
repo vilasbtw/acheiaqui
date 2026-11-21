@@ -12,6 +12,7 @@ from app.schemas.item import ItemCriar, ItemPublico
 from app.services.busca import aplicar_busca
 from app.services.foto import FotoInvalida, decodificar_foto
 from app.services.ia_categoria import sugerir_categoria
+from app.services.limites import exigir_limite_diario, exigir_limite_por_ip
 
 router = APIRouter(prefix="/itens", tags=["itens"])
 
@@ -34,9 +35,10 @@ def _categoria_sugerida(descricao: str, categorias: list[Categoria]) -> Optional
     return None
 
 
-@router.post("", response_model=ItemPublico, status_code=201)
+@router.post("", response_model=ItemPublico, status_code=201, dependencies=[Depends(exigir_limite_por_ip)])
 def registrar_item(dados: ItemCriar, sessao: Session = Depends(obter_sessao)):
-    """RF01/RF02: qualquer pessoa registra um item encontrado, sem conta, no campus escolhido."""
+    """RF01/RF02: qualquer pessoa registra um item encontrado, sem conta, no campus escolhido.
+    Limites contra abuso (decisão 001): por IP antes de tudo; por dia antes da IA."""
     campus = _campus_ativo(sessao, dados.campus)
     if campus is None:  # antes da IA: um registro inválido não gasta a cota
         raise HTTPException(status_code=400, detail="Campus inexistente ou inativo.")
@@ -48,9 +50,11 @@ def registrar_item(dados: ItemCriar, sessao: Session = Depends(obter_sessao)):
             raise HTTPException(status_code=422, detail=str(erro)) from None
 
     categorias = sessao.query(Categoria).all()
-    categoria_id = dados.categoria_id
-    if categoria_id is not None and all(c.id != categoria_id for c in categorias):
+    if dados.categoria_id is not None and all(c.id != dados.categoria_id for c in categorias):
         raise HTTPException(status_code=400, detail="Categoria inexistente.")
+    exigir_limite_diario(sessao, com_foto=foto is not None)  # decisão 001: antes da IA
+
+    categoria_id = dados.categoria_id
     if categoria_id is None:
         categoria_id = _categoria_sugerida(dados.descricao, categorias)
 

@@ -26,6 +26,7 @@ from app.main import app
 from app.models.cae_membro import CaeMembro
 from app.models.campus import Campus
 from app.models.categoria import Categoria
+from app.services.limites import limite_por_ip
 from app.tempo import agora_local
 
 CATEGORIAS = ("Documentos", "Eletrônicos", "Bolsas e mochilas")
@@ -96,6 +97,7 @@ def sessao_teste():
 
 @pytest.fixture()
 def client(sessao_teste):
+    limite_por_ip.limpar()  # o limite por IP vive na memória: cada teste começa do zero
     app.dependency_overrides[obter_sessao] = lambda: sessao_teste
     app.dependency_overrides.pop(exigir_autenticacao, None)
     yield TestClient(app)

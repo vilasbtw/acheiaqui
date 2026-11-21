@@ -99,9 +99,9 @@ A API não guarda nada em disco nem em memória entre requisições, então cres
 1. **Primeiro gargalo: o sono do Render e as 750 h.** Plano pago do Render e do Supabase resolve sem mudar o código.
 2. **Mais campi** (Etapa 1): uma coluna `campus_id` e a tabela `campi`, no mesmo banco. Não cria um banco por campus.
 3. **Busca**: `ILIKE` percorre a tabela inteira. Com muitos milhares de itens, a Etapa 4 troca por coluna normalizada e índice `pg_trgm`.
-4. **Mais de uma instância**: um limite de requisições guardado em memória não vale (cada instância teria o seu). A decisão 001 precisa levar isso em conta.
+4. **Mais de uma instância**: o limite por IP da decisão 001 fica na memória, então cada instância teria o seu (e ele zera quando o Render reinicia). Os limites diários contam no banco e continuam valendo. Com mais instâncias, mover o limite por IP para o banco ou para um Redis.
 5. **IA**: a chamada é síncrona e pode segurar o registro por até 8 s. Se o volume crescer, mover para segundo plano.
-6. **Banco**: as fotos ficam no banco (D4), até 600 KB cada (em média bem menos, uns 100 a 300 KB). Com os 500 MB do plano gratuito, cabem alguns milhares de itens com foto. Se apertar, mover `item_fotos` para o Storage do Supabase: só a API lê e grava as fotos, então o frontend não muda. Sem limite de requisições (decisão 001), um script abusivo enche o banco mais rápido com fotos.
+6. **Banco**: as fotos ficam no banco (D4), até 600 KB cada (em média bem menos, uns 100 a 300 KB). Com os 500 MB do plano gratuito, cabem alguns milhares de itens com foto. Se apertar, mover `item_fotos` para o Storage do Supabase: só a API lê e grava as fotos, então o frontend não muda. O limite de 60 fotos por dia (decisão 001) segura o pior caso em uns 36 MB por dia.
 
 ## Qualidade e segurança na esteira
 

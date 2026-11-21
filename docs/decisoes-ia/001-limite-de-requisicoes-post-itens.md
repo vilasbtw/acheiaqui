@@ -1,6 +1,6 @@
 # Decisão 001: limitar o uso abusivo do POST /itens
 
-Data: ____/10/2026
+Data: 21/11/2026
 Quem decidiu: ________
 PR ou issue relacionado: ________
 
@@ -44,11 +44,12 @@ Colar exatamente este texto em todos os modelos:
 > escolheria e diga o que você não tem certeza.
 
 ## Modelos consultados
-(Anotar o plano do ChatHub usado e quantos modelos couberam por rodada.)
+A implementação foi feita com o **Claude Code (Claude Opus 5.5)**, que propôs e comparou as alternativas abaixo.
+O ChatHub **não** foi consultado nesta rodada. Se a equipe consultar, preencha a tabela e compare com a decisão.
 
 | Modelo | Resumo da proposta | Pontos fortes | Pontos fracos |
 |---|---|---|---|
-|  |  |  |  |
+| Claude Opus 5.5 (Claude Code) | Três camadas: por IP na memória (generoso) + itens por dia e fotos por dia contados no banco | Sem infraestrutura nova; os limites diários sobrevivem a reinícios; testável com pytest | Por IP zera no reinício; depende do `True-Client-IP` do Render |
 |  |  |  |  |
 
 ## Pontos para conferir nas respostas (análise nossa, feita ANTES de consultar os modelos)
@@ -62,26 +63,60 @@ Não é saída do ChatHub: serve para avaliar se os modelos esqueceram algo impo
 - Qualquer solução precisa devolver 429 com mensagem clara, e o frontend (`api.js`) precisa mostrar.
 - Dá para testar com pytest? Como?
 
+## Alternativas
+- **A. Só por IP, na memória** (janela deslizante, sem biblioteca nova): simples, mas zera a cada reinício do Render
+  e, no Wi-Fi do campus, todos saem pelo mesmo IP público. Apertado, bloqueia o campus; frouxo, não protege a cota.
+- **B. Só limites globais contados no banco** (itens e fotos nas últimas 24 h): sobrevive a reinícios e a várias
+  instâncias, mas um único abusador esgota o limite do dia e bloqueia todo mundo até o dia seguinte.
+- **C. A + B juntas**: o por IP (generoso) barra o script que martela; os globais seguram o pior caso da cota da IA
+  e do espaço do banco, mesmo se o por IP falhar (reinício, IP trocado).
+
+Também consideradas e descartadas: `slowapi` (biblioteca nova, guarda na memória do mesmo jeito que A); Redis
+(infraestrutura nova, fora das restrições); CAPTCHA (serviço externo e atrito para quem registra no celular).
+
 ## Comparação
-Notas de 1 a 5 por critério, justificadas em uma frase quando a nota for extrema.
+Notas de 1 a 5 por critério.
 
-| Critério | Peso | Alternativa A | Alternativa B | Alternativa C |
+| Critério | Peso | A. Por IP | B. Global no banco | C. A + B |
 |---|---|---|---|---|
-| Resolve a causa raiz | 30% |  |  |  |
-| Segurança | 25% |  |  |  |
-| Mudança pequena | 15% |  |  |  |
-| Passa na esteira | 15% |  |  |  |
-| Segue o padrão do projeto | 10% |  |  |  |
-| Esforço | 5% |  |  |  |
-| **Total (soma ponderada)** | 100% |  |  |  |
+| Resolve a causa raiz | 30% | 2 | 3 | 5 |
+| Segurança | 25% | 2 | 3 | 4 |
+| Mudança pequena | 15% | 5 | 4 | 3 |
+| Passa na esteira | 15% | 5 | 5 | 5 |
+| Segue o padrão do projeto | 10% | 4 | 5 | 5 |
+| Esforço | 5% | 5 | 4 | 3 |
+| **Total (soma ponderada)** | 100% | **3,25** | **3,70** | **4,35** |
 
-## Onde os modelos discordaram
-Se discordaram, provavelmente a especificação estava ambígua. Anotar o que foi esclarecido.
+Segurança de C fica em 4, e não 5: o limite por IP depende do cabeçalho `True-Client-IP`. A informação de que o
+Cloudflare do Render sempre o preenche vem da comunidade do Render, não da documentação oficial.
+
+## Pontos para conferir: como ficaram
+- **IP atrás do proxy:** `X-Forwarded-For` **não** é usado (o Render só acrescenta a ele, então dá para forjar). O
+  cabeçalho vem da variável `IP_CABECALHO_CLIENTE` (`True-Client-IP` no Render). Sem a variável, usa o IP da conexão.
+- **Memória zera no reinício / várias instâncias:** só o limite por IP fica na memória; os diários contam no banco.
+- **Proteger a cota da IA:** o limite diário roda depois das validações e **antes** da IA. Uma chamada por item, no máximo.
+- **429 com mensagem clara:** sim, com `Retry-After`. O frontend já mostra o `detail` da API (`api.js`), sem mudança.
+- **Testável com pytest:** sim, `tests/test_limites.py`. Os limites são trocados com `monkeypatch` para não
+  precisar de 200 registros por teste.
 
 ## Decisão
-Qual alternativa foi escolhida, por quê e o que ficou de fora.
+**Alternativa C**, em `backend/app/services/limites.py`:
 
-## Validação (preencher depois de aplicar)
-- Testes novos/alterados: ________
-- Resultado da esteira no PR (link): ________
-- Tempo gasto, do alerta até o PR verde: ________ (compare com a estimativa sem IA: ________)
+| Limite | Valor | Onde fica | Resposta |
+|---|---|---|---|
+| Por IP | 20 registros a cada 10 min (conta também os inválidos) | Memória | 429 "Muitos registros seguidos…" |
+| Itens por dia | 200 nas últimas 24 h, todos os campi juntos | Banco | 429 "limite de registros do dia" |
+| Fotos por dia | 60 nas últimas 24 h (uns 36 MB no pior caso) | Banco | 429 "registre o item sem ela" |
+
+A busca e as rotas da CAE não têm limite. O DAST afrouxa os limites na cópia descartável da API
+(`scripts/subir_para_dast.py`), senão o ZAP só receberia 429.
+
+Ficou de fora: limite por campus (um campus abusado ainda consome a cota dos outros) e limite na memória
+compartilhada entre instâncias. Revisar se o Render passar a ter mais de uma instância.
+
+## Validação
+- Testes novos: `tests/test_limites.py` (16 testes: janela deslizante, por IP, cabeçalho, limites diários,
+  nenhuma chamada à IA quando estoura). Suíte local: 181 passaram.
+- Resultado da esteira (link): ________
+- Conferir em produção que o `True-Client-IP` chega: ________
+- Tempo gasto, do alerta até a esteira verde: ________ (compare com a estimativa sem IA: ________)

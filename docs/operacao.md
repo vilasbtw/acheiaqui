@@ -19,8 +19,13 @@ Backend, cadastradas no painel do Render (local: `backend/.env`, modelo em `back
 | `IA_API_KEY` | Chave do provedor de IA | Não |
 | `IA_BASE_URL` | Endereço do provedor (compatível com `chat/completions`) | Não |
 | `IA_MODEL` | Nome do modelo | Não |
+| `IP_CABECALHO_CLIENTE` | Cabeçalho com o IP real do visitante, para o limite por IP do `POST /itens` (decisão 001). No Render: `True-Client-IP`. Local: deixe vazia | Sim, no Render |
 
 As três `IA_*` vão juntas. Se faltar qualquer uma, o sistema funciona normalmente, só sem categoria automática.
+
+Sem `IP_CABECALHO_CLIENTE` no Render, a API enxerga o IP do proxy do Render em toda requisição: o limite por IP
+vira um limite para o site inteiro (20 registros a cada 10 minutos, somando todo mundo). **Nunca** use
+`X-Forwarded-For`: o Render só acrescenta a ele, e o visitante consegue forjar o próprio IP.
 
 Outras variáveis:
 
